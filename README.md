@@ -1,32 +1,97 @@
-# React + TypeScript + Vite
+# FamilyTree
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+FamilyTree is a privacy-focused genealogy workspace for building interactive family trees, preserving stories and documents, and collaborating with relatives across generations.
 
-Currently, two official plugins are available:
+## Screenshots
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+![FamilyTree landing page](Screenshots/LandingPage1.png)
 
-## React Compiler
+![Privacy-first onboarding section](Screenshots/LandingPage2.png)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Features
 
-## Expanding the Oxlint configuration
+- Interactive multi-generation family tree with member profiles and branches
+- Relationship finder and kinship calculations
+- Family timeline, events, stories, photos, and historical documents
+- Family map for recording places connected to a lineage
+- GEDCOM, JSON, and CSV export workflows
+- Invitations and collaboration tools for relatives
+- Privacy center, activity logs, family settings, and account settings
+- Firebase Authentication and Cloud Firestore integration
+- Responsive public pages, onboarding flow, and authenticated dashboard
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+## Tech Stack
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+- React 19 and TypeScript
+- Vite
+- React Router
+- Tailwind CSS
+- Firebase Authentication and Firestore
+- React Flow for the interactive tree
+- Leaflet and React Leaflet for maps
+- Framer Motion for UI animation
+- Oxlint for linting
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 20 or newer
+- npm 10 or newer
+- A Firebase project with Authentication and Cloud Firestore enabled
+
+### Install and run
+
+```bash
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Vite will print the local development URL, normally `http://localhost:5173`.
+
+### Production build
+
+```bash
+npm run build
+npm run preview
+```
+
+### Lint
+
+```bash
+npm run lint
+```
+
+## Firebase Configuration
+
+Firebase is initialized in [`src/services/firebase.ts`](src/services/firebase.ts). For a deployment, create a Firebase web app and configure:
+
+1. Email/password and Google sign-in providers in Firebase Authentication.
+2. Cloud Firestore in the required region.
+3. Firestore security rules that restrict family data to authorized members.
+4. Authorized domains for local development and the deployed site.
+
+The Firebase web API key is an identifier, not a secret. Access control must be enforced with Authentication and Firestore Security Rules. Do not place service-account credentials in this frontend project.
+
+## Application Routes
+
+Public routes include `/`, `/about`, `/features`, `/help`, `/login`, `/register`, and legal pages. Authenticated routes include `/dashboard`, `/tree`, `/members`, `/relationships`, `/timeline`, `/events`, `/photos`, `/stories`, `/documents`, `/map`, `/reports`, `/export`, `/collaboration`, `/privacy`, `/activity`, and settings pages.
+
+## Project Structure
+
+```text
+src/
+  components/   Reusable UI, layouts, modals, and tree nodes
+  context/      Authentication, family data, and theme state
+  data/         Seed family data used by the application
+  pages/        Public, auth, dashboard, and feature pages
+  services/     Firebase integration
+  types/        Shared TypeScript types
+  utils/        GEDCOM, relationship, and tree-layout helpers
+```
+
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for data-flow and extension guidance. Contribution conventions are in [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+## License
+
+No license has been selected for this repository yet. Treat the source as all rights reserved until a license is added by the project owner.
