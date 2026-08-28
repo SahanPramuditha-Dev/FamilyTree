@@ -155,4 +155,6 @@ For more architectural details, see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.m
 
 ## 📄 License
 
-No license has been specified yet. All rights reserved.
+Copyright &copy; 2026 **Sahan Pramuditha**. All rights reserved.
+
+This project is proprietary and confidential. No part of this software, code, assets, or documentation may be used, copied, modified, distributed, or published without the express prior written consent of the copyright owner. See the [`LICENSE`](LICENSE) file for complete details.
