@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Check } from 'lucide-react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { ChevronDown, Check, Search } from 'lucide-react';
 
 /* =========================================================
    1. Base Dropdown & Menu
@@ -12,6 +12,7 @@ export interface DropdownProps {
   position?: 'bottom' | 'top';
   className?: string;
   width?: string;
+  fullWidth?: boolean;
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
@@ -23,6 +24,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
   position = 'bottom',
   className = '',
   width = 'w-56',
+  fullWidth = false,
   isOpen: controlledIsOpen,
   onOpenChange
 }) => {
@@ -70,22 +72,22 @@ export const Dropdown: React.FC<DropdownProps> = ({
   };
 
   const positionStyles = {
-    bottom: 'top-full mt-2',
-    top: 'bottom-full mb-2'
+    bottom: 'top-full mt-1.5',
+    top: 'bottom-full mb-1.5'
   };
 
   return (
-    <div className="relative inline-block text-left" ref={dropdownRef}>
+    <div className={`relative ${fullWidth ? 'w-full block' : 'inline-block text-left'}`} ref={dropdownRef}>
       <div 
         onClick={() => setOpen(!open)} 
-        className="cursor-pointer inline-flex items-center"
+        className={`cursor-pointer ${fullWidth ? 'w-full block' : 'inline-flex items-center'}`}
       >
         {trigger}
       </div>
 
       {open && (
         <div
-          className={`absolute ${positionStyles[position]} ${alignStyles[align]} ${width} z-50 rounded-2xl bg-white/95 dark:bg-stone-900/95 backdrop-blur-xl border border-stone-200/80 dark:border-stone-800 shadow-2xl py-2 animate-in fade-in zoom-in-95 duration-150 ${className}`}
+          className={`absolute ${positionStyles[position]} ${fullWidth ? 'left-0 right-0 w-full' : `${alignStyles[align]} ${width}`} z-50 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700/90 shadow-2xl py-1.5 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 ${className}`}
         >
           {children}
         </div>
@@ -122,10 +124,10 @@ export const DropdownItem: React.FC<DropdownItemProps> = ({
   const variantStyles = {
     default: active
       ? 'bg-stone-100 dark:bg-stone-800 text-stone-900 dark:text-stone-100 font-semibold'
-      : 'text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800/70 hover:text-stone-900 dark:hover:text-stone-100',
+      : 'text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800/80 hover:text-stone-900 dark:hover:text-stone-100',
     forest: active
-      ? 'bg-forest-50 dark:bg-forest-950/60 text-forest-800 dark:text-forest-300 font-semibold'
-      : 'text-stone-700 dark:text-stone-300 hover:bg-forest-50 dark:hover:bg-forest-950/40 hover:text-forest-800 dark:hover:text-forest-300',
+      ? 'bg-forest-50 dark:bg-forest-950/60 text-forest-900 dark:text-forest-200 font-semibold'
+      : 'text-stone-700 dark:text-stone-300 hover:bg-forest-50/70 dark:hover:bg-forest-950/40 hover:text-forest-900 dark:hover:text-forest-200',
     danger: 'text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 hover:text-rose-700 dark:hover:text-rose-300'
   };
 
@@ -134,13 +136,13 @@ export const DropdownItem: React.FC<DropdownItemProps> = ({
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className={`w-full text-left px-3.5 py-2 text-xs flex items-center justify-between transition gap-2.5 rounded-xl mx-auto ${variantStyles[variant]} ${
+      className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between transition gap-2 rounded-xl ${variantStyles[variant]} ${
         disabled ? 'opacity-40 pointer-events-none' : ''
       } ${className}`}
     >
-      <div className="flex items-center gap-2.5 min-w-0">
+      <div className="flex items-center gap-2.5 min-w-0 flex-1">
         {icon && <span className="flex-shrink-0 text-stone-400 dark:text-stone-500">{icon}</span>}
-        <span className="truncate">{children}</span>
+        <div className="truncate flex-1">{children}</div>
       </div>
       {badge && <span className="flex-shrink-0">{badge}</span>}
     </button>
@@ -163,11 +165,11 @@ export const DropdownHeader: React.FC<{ children: React.ReactNode; subtitle?: st
 );
 
 export const DropdownDivider: React.FC<{ className?: string }> = ({ className = '' }) => (
-  <div className={`h-px bg-stone-100 dark:bg-stone-800 my-1.5 ${className}`} />
+  <div className={`h-px bg-stone-100 dark:border-stone-800 my-1.5 ${className}`} />
 );
 
 /* =========================================================
-   4. SelectDropdown (Rich Select Replacement)
+   4. SelectDropdown (Rich Custom Select UI Replacement)
    ========================================================= */
 
 export interface SelectOption {
@@ -184,10 +186,13 @@ export interface SelectDropdownProps {
   onChange: (value: string) => void;
   placeholder?: string;
   icon?: React.ReactNode;
-  size?: 'sm' | 'md';
+  size?: 'sm' | 'md' | 'lg';
   className?: string;
   menuWidth?: string;
+  fullWidth?: boolean;
   disabled?: boolean;
+  searchable?: boolean;
+  searchPlaceholder?: string;
 }
 
 export const SelectDropdown: React.FC<SelectDropdownProps> = ({
@@ -196,31 +201,47 @@ export const SelectDropdown: React.FC<SelectDropdownProps> = ({
   onChange,
   placeholder = 'Select option',
   icon,
-  size = 'sm',
+  size = 'md',
   className = '',
   menuWidth = 'w-56',
-  disabled = false
+  fullWidth = false,
+  disabled = false,
+  searchable = false,
+  searchPlaceholder = 'Search...'
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const selected = options.find(o => o.value === value);
 
+  // Filter options if searchable
+  const filteredOptions = useMemo(() => {
+    if (!searchable || !searchQuery.trim()) return options;
+    const q = searchQuery.toLowerCase().trim();
+    return options.filter(
+      o => o.label.toLowerCase().includes(q) || (o.description && o.description.toLowerCase().includes(q))
+    );
+  }, [options, searchable, searchQuery]);
+
   const sizeStyles = {
-    sm: 'py-1.5 px-3 text-xs rounded-xl gap-2',
-    md: 'py-2 px-3.5 text-xs rounded-xl gap-2.5'
+    sm: 'py-1.5 px-3 text-xs rounded-xl gap-2 min-h-[32px]',
+    md: 'py-2 px-3.5 text-xs rounded-xl gap-2.5 min-h-[38px]',
+    lg: 'py-2.5 px-4 text-sm rounded-2xl gap-3 min-h-[44px]'
   };
 
   const triggerNode = (
     <div
-      className={`inline-flex items-center justify-between bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-800 dark:text-stone-200 border border-stone-200 dark:border-stone-700 font-medium transition shadow-xs select-none ${sizeStyles[size]} ${
-        disabled ? 'opacity-50 pointer-events-none' : ''
-      } ${className}`}
+      className={`flex items-center justify-between bg-white dark:bg-stone-900 hover:bg-stone-50 dark:hover:bg-stone-800 text-stone-900 dark:text-stone-100 border border-stone-300/80 dark:border-stone-700 font-medium transition shadow-xs select-none hover:border-forest-500 dark:hover:border-forest-600 focus-within:border-forest-600 focus-within:ring-2 focus-within:ring-forest-500/20 ${sizeStyles[size]} ${
+        fullWidth ? 'w-full' : 'inline-flex'
+      } ${disabled ? 'opacity-50 pointer-events-none' : ''} ${className}`}
     >
       <div className="flex items-center gap-2 truncate">
-        {icon && <span className="text-stone-400 dark:text-stone-500">{icon}</span>}
-        {selected?.icon && <span>{selected.icon}</span>}
-        <span className="truncate">{selected ? selected.label : placeholder}</span>
+        {icon && <span className="text-stone-400 dark:text-stone-500 flex-shrink-0">{icon}</span>}
+        {selected?.icon && <span className="flex-shrink-0">{selected.icon}</span>}
+        <span className={`truncate font-medium ${selected ? 'text-stone-900 dark:text-stone-100' : 'text-stone-400 dark:text-stone-500'}`}>
+          {selected ? selected.label : placeholder}
+        </span>
       </div>
-      <ChevronDown className={`w-3.5 h-3.5 text-stone-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+      <ChevronDown className={`w-3.5 h-3.5 text-stone-400 transition-transform duration-200 flex-shrink-0 ml-2 ${isOpen ? 'rotate-180 text-forest-600 dark:text-forest-400' : ''}`} />
     </div>
   );
 
@@ -228,42 +249,70 @@ export const SelectDropdown: React.FC<SelectDropdownProps> = ({
     <Dropdown
       trigger={triggerNode}
       isOpen={isOpen}
-      onOpenChange={setIsOpen}
+      onOpenChange={(open) => {
+        setIsOpen(open);
+        if (!open) setSearchQuery('');
+      }}
       width={menuWidth}
+      fullWidth={fullWidth}
       align="left"
     >
-      <div className="max-h-60 overflow-y-auto p-1 space-y-0.5">
-        {options.map((option) => {
-          const isSelected = option.value === value;
-          return (
-            <DropdownItem
-              key={option.value}
-              active={isSelected}
-              variant={isSelected ? 'forest' : 'default'}
-              onClick={() => {
-                onChange(option.value);
-                setIsOpen(false);
-              }}
-              icon={option.icon}
-              badge={
-                isSelected ? (
-                  <Check className="w-3.5 h-3.5 text-forest-600 dark:text-forest-400" />
-                ) : option.badge ? (
-                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-stone-200 dark:bg-stone-700 text-stone-600 dark:text-stone-300">
-                    {option.badge}
-                  </span>
-                ) : null
-              }
-            >
-              <div>
-                <div className="font-semibold">{option.label}</div>
-                {option.description && (
-                  <div className="text-[10px] text-stone-400 font-normal">{option.description}</div>
-                )}
-              </div>
-            </DropdownItem>
-          );
-        })}
+      {searchable && (
+        <div className="p-2 border-b border-stone-100 dark:border-stone-800">
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 text-stone-400 absolute left-2.5 top-2.5" />
+            <input
+              type="text"
+              autoFocus
+              placeholder={searchPlaceholder}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-8 pr-3 py-1.5 text-xs bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-stone-900 dark:text-stone-100 rounded-xl focus:ring-forest-500 focus:border-forest-500 shadow-xs"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
+      )}
+
+      <div className="max-h-60 overflow-y-auto p-1.5 space-y-0.5 custom-scrollbar">
+        {filteredOptions.length === 0 ? (
+          <div className="px-3 py-3 text-center text-xs text-stone-400 dark:text-stone-500">
+            No matching options
+          </div>
+        ) : (
+          filteredOptions.map((option) => {
+            const isSelected = option.value === value;
+            return (
+              <DropdownItem
+                key={option.value}
+                active={isSelected}
+                variant={isSelected ? 'forest' : 'default'}
+                onClick={() => {
+                  onChange(option.value);
+                  setIsOpen(false);
+                  setSearchQuery('');
+                }}
+                icon={option.icon}
+                badge={
+                  isSelected ? (
+                    <Check className="w-3.5 h-3.5 text-forest-600 dark:text-forest-400 flex-shrink-0" />
+                  ) : option.badge ? (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 font-medium flex-shrink-0">
+                      {option.badge}
+                    </span>
+                  ) : null
+                }
+              >
+                <div className="text-left">
+                  <div className="font-medium text-stone-900 dark:text-stone-100">{option.label}</div>
+                  {option.description && (
+                    <div className="text-[10px] text-stone-400 font-normal mt-0.5">{option.description}</div>
+                  )}
+                </div>
+              </DropdownItem>
+            );
+          })
+        )}
       </div>
     </Dropdown>
   );

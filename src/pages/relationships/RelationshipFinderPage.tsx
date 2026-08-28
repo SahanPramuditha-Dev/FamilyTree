@@ -5,15 +5,12 @@ import {
   Route, 
   Sparkles, 
   ArrowRight, 
-  User, 
-  Heart, 
-  GitFork, 
-  Layers, 
   Info, 
-  CheckCircle2,
-  HelpCircle
+  HelpCircle,
+  User
 } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { SelectDropdown, SelectOption } from '../../components/ui/Dropdown';
 
 export const RelationshipFinderPage: React.FC = () => {
   const { members } = useFamily();
@@ -31,87 +28,99 @@ export const RelationshipFinderPage: React.FC = () => {
     return findRelationship(personAId, personBId, members);
   }, [personAId, personBId, members]);
 
-  const personA = members.find(m => m.id === personAId);
-  const personB = members.find(m => m.id === personBId);
-
   return (
     <div className="space-y-8 pb-16">
       
       {/* Header */}
       <div className="space-y-2">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-forest-100 text-forest-800 text-xs font-semibold">
-          <Sparkles className="w-3.5 h-3.5 text-forest-600" />
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-forest-100 dark:bg-forest-950/60 text-forest-800 dark:text-forest-300 border border-transparent dark:border-forest-700/50 text-xs font-semibold">
+          <Sparkles className="w-3.5 h-3.5 text-forest-600 dark:text-forest-400" />
           <span>Genealogical Kinship Engine</span>
         </div>
-        <h1 className="font-serif text-2xl sm:text-4xl font-bold text-stone-900">
+        <h1 className="font-serif text-2xl sm:text-4xl font-bold text-stone-900 dark:text-stone-100">
           Relationship Finder & Path Explorer
         </h1>
-        <p className="text-xs sm:text-sm text-stone-500 max-w-2xl">
+        <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400 max-w-2xl">
           Select any two family members to calculate their shortest genealogical connection and discover their exact kinship title.
         </p>
       </div>
 
-      {/* Selectors Card */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-soft">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
-          
-          {/* Person A Selector */}
-          <div className="md:col-span-2 space-y-2">
-            <label className="block text-xs font-bold uppercase tracking-wider text-stone-500">
-              Person A (Origin Relative)
-            </label>
-            <select
-              value={personAId}
-              onChange={(e) => setPersonAId(e.target.value)}
-              className="w-full p-3.5 rounded-2xl border border-stone-200 bg-stone-50 text-xs font-semibold text-stone-900 focus:ring-forest-500 focus:border-forest-500 shadow-sm"
-            >
-              {members.map(m => (
-                <option key={m.id} value={m.id}>
-                  {m.firstName} {m.lastName} (Gen {m.generation}) {m.nickname ? `— ${m.nickname}` : ''}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Swap / Arrow Center */}
-          <div className="flex items-center justify-center pt-2 md:pt-6">
-            <button
-              onClick={() => {
-                const temp = personAId;
-                setPersonAId(personBId);
-                setPersonBId(temp);
-              }}
-              className="p-3 rounded-2xl bg-forest-50 hover:bg-forest-100 text-forest-800 border border-forest-200 shadow-sm transition hover:scale-105"
-              title="Swap Relatives"
-            >
-              <Route className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Person B Selector */}
-          <div className="md:col-span-2 space-y-2">
-            <label className="block text-xs font-bold uppercase tracking-wider text-stone-500">
-              Person B (Target Relative)
-            </label>
-            <select
-              value={personBId}
-              onChange={(e) => setPersonBId(e.target.value)}
-              className="w-full p-3.5 rounded-2xl border border-stone-200 bg-stone-50 text-xs font-semibold text-stone-900 focus:ring-forest-500 focus:border-forest-500 shadow-sm"
-            >
-              {members.map(m => (
-                <option key={m.id} value={m.id}>
-                  {m.firstName} {m.lastName} (Gen {m.generation}) {m.nickname ? `— ${m.nickname}` : ''}
-                </option>
-              ))}
-            </select>
-          </div>
-
+      {/* Content */}
+      {members.length < 2 ? (
+        <div className="p-12 text-center bg-white dark:bg-stone-900 rounded-3xl border border-stone-200 dark:border-stone-800 text-stone-400 dark:text-stone-500 space-y-3">
+          <Route className="w-8 h-8 mx-auto text-stone-300 dark:text-stone-600" />
+          <h3 className="font-serif font-bold text-base text-stone-700 dark:text-stone-300">Not Enough Relatives Recorded</h3>
+          <p className="text-xs max-w-md mx-auto text-stone-500 dark:text-stone-400">
+            At least two family members are required to calculate genealogical relationships. Add relatives in the Interactive Tree or Members directory to begin exploring kinship paths.
+          </p>
         </div>
-      </div>
+      ) : (
+        <>
+          {/* Selectors Card */}
+          <div className="bg-white dark:bg-stone-900 rounded-3xl p-6 sm:p-8 border border-stone-200 dark:border-stone-800 shadow-soft">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
+              
+              {/* Person A Selector */}
+              <div className="md:col-span-2 space-y-2">
+                <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">
+                  Person A (Origin Relative)
+                </label>
+                <SelectDropdown
+                  options={members.map(m => ({
+                    value: m.id,
+                    label: `${m.firstName} ${m.lastName} (Gen ${m.generation})${m.nickname ? ` — ${m.nickname}` : ''}`,
+                    badge: `Gen ${m.generation}`
+                  }))}
+                  value={personAId}
+                  onChange={setPersonAId}
+                  fullWidth
+                  size="lg"
+                  searchable
+                  searchPlaceholder="Search person A..."
+                />
+              </div>
 
-      {/* Results Card */}
-      {result ? (
-        <div className="bg-white rounded-3xl p-6 sm:p-10 border border-stone-200 shadow-soft space-y-8 animate-in fade-in duration-200">
+              {/* Swap / Arrow Center */}
+              <div className="flex items-center justify-center pt-2 md:pt-6">
+                <button
+                  onClick={() => {
+                    const temp = personAId;
+                    setPersonAId(personBId);
+                    setPersonBId(temp);
+                  }}
+                  className="p-3.5 rounded-2xl bg-forest-50 dark:bg-forest-950/80 hover:bg-forest-100 dark:hover:bg-forest-900 text-forest-800 dark:text-forest-300 border border-forest-200 dark:border-forest-800 shadow-sm transition hover:scale-105 active:scale-95"
+                  title="Swap Relatives"
+                >
+                  <Route className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Person B Selector */}
+              <div className="md:col-span-2 space-y-2">
+                <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">
+                  Person B (Target Relative)
+                </label>
+                <SelectDropdown
+                  options={members.map(m => ({
+                    value: m.id,
+                    label: `${m.firstName} ${m.lastName} (Gen ${m.generation})${m.nickname ? ` — ${m.nickname}` : ''}`,
+                    badge: `Gen ${m.generation}`
+                  }))}
+                  value={personBId}
+                  onChange={setPersonBId}
+                  fullWidth
+                  size="lg"
+                  searchable
+                  searchPlaceholder="Search person B..."
+                />
+              </div>
+
+            </div>
+          </div>
+
+          {/* Results Card */}
+          {result ? (
+            <div className="bg-white dark:bg-stone-900 rounded-3xl p-6 sm:p-10 border border-stone-200 dark:border-stone-800 shadow-soft space-y-8 animate-in fade-in duration-200">
           
           {/* Main Title Badge Banner */}
           <div className="p-6 rounded-3xl bg-gradient-to-r from-forest-900 to-forest-800 text-white flex flex-col sm:flex-row items-center justify-between gap-6 shadow-md">
@@ -133,8 +142,8 @@ export const RelationshipFinderPage: React.FC = () => {
 
           {/* Visual Step-by-Step Path */}
           <div className="space-y-4">
-            <h3 className="font-serif font-bold text-base text-stone-900 flex items-center gap-2">
-              <Route className="w-5 h-5 text-forest-700" />
+            <h3 className="font-serif font-bold text-base text-stone-900 dark:text-stone-100 flex items-center gap-2">
+              <Route className="w-5 h-5 text-forest-700 dark:text-forest-400" />
               <span>Step-by-Step Lineage Path</span>
             </h3>
 
@@ -151,24 +160,24 @@ export const RelationshipFinderPage: React.FC = () => {
                       onClick={() => navigate(`/members/${nodeMember.id}`)}
                       className={`p-3.5 rounded-2xl border transition cursor-pointer shadow-soft hover:shadow-elevated flex items-center gap-3 ${
                         isStart 
-                          ? 'bg-forest-50 border-forest-300 ring-2 ring-forest-400' 
+                          ? 'bg-forest-50 dark:bg-forest-950/60 border-forest-300 dark:border-forest-700 ring-2 ring-forest-400' 
                           : isEnd 
-                          ? 'bg-emerald-50 border-emerald-300 ring-2 ring-emerald-400' 
-                          : 'bg-stone-50 border-stone-200 hover:border-forest-200'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-700 ring-2 ring-emerald-400' 
+                          : 'bg-stone-50 dark:bg-stone-800/80 border-stone-200 dark:border-stone-700 hover:border-forest-200 dark:hover:border-forest-700'
                       }`}
                     >
                       {nodeMember.avatarUrl ? (
-                        <img src={nodeMember.avatarUrl} alt="" className="w-10 h-10 rounded-xl object-cover" />
+                        <img src={nodeMember.avatarUrl} alt="" className="w-10 h-10 rounded-xl object-cover border border-stone-200 dark:border-stone-700" />
                       ) : (
-                        <div className="w-10 h-10 rounded-xl bg-forest-100 text-forest-800 font-bold flex items-center justify-center text-xs">
+                        <div className="w-10 h-10 rounded-xl bg-forest-100 dark:bg-forest-950 text-forest-800 dark:text-forest-300 font-bold flex items-center justify-center text-xs border border-forest-200 dark:border-forest-800">
                           {nodeMember.firstName.charAt(0)}
                         </div>
                       )}
                       <div>
-                        <span className="font-serif font-bold text-xs text-stone-900 block truncate max-w-[130px]">
+                        <span className="font-serif font-bold text-xs text-stone-900 dark:text-stone-100 block truncate max-w-[130px]">
                           {nodeMember.firstName} {nodeMember.lastName}
                         </span>
-                        <span className="text-[10px] text-stone-500 font-mono">
+                        <span className="text-[10px] text-stone-500 dark:text-stone-400 font-mono">
                           Gen {nodeMember.generation} {isStart ? '(Origin)' : isEnd ? '(Target)' : ''}
                         </span>
                       </div>
@@ -177,10 +186,10 @@ export const RelationshipFinderPage: React.FC = () => {
                     {/* Step Linker Arrow with Relation tag */}
                     {nextStep && (
                       <div className="flex flex-col items-center px-1">
-                        <span className="text-[10px] font-bold text-forest-700 bg-forest-50 px-2 py-0.5 rounded-full border border-forest-200 shadow-xs mb-1">
+                        <span className="text-[10px] font-bold text-forest-700 dark:text-forest-300 bg-forest-50 dark:bg-forest-950/80 px-2 py-0.5 rounded-full border border-forest-200 dark:border-forest-800 shadow-xs mb-1">
                           {nextStep.relationType}
                         </span>
-                        <ArrowRight className="w-4 h-4 text-forest-500" />
+                        <ArrowRight className="w-4 h-4 text-forest-500 dark:text-forest-400" />
                       </div>
                     )}
                   </React.Fragment>
@@ -190,9 +199,9 @@ export const RelationshipFinderPage: React.FC = () => {
           </div>
 
           {/* Genealogical Explanation Box */}
-          <div className="p-5 rounded-2xl bg-stone-50 border border-stone-200/80 text-xs text-stone-600 space-y-2">
-            <h4 className="font-bold text-stone-900 flex items-center gap-1.5">
-              <Info className="w-4 h-4 text-forest-700" /> Kinship Terminology Explanation
+          <div className="p-5 rounded-2xl bg-stone-50 dark:bg-stone-850 border border-stone-200/80 dark:border-stone-750 text-xs text-stone-600 dark:text-stone-300 space-y-2">
+            <h4 className="font-bold text-stone-900 dark:text-stone-100 flex items-center gap-1.5">
+              <Info className="w-4 h-4 text-forest-700 dark:text-forest-400" /> Kinship Terminology Explanation
             </h4>
             <p className="leading-relaxed">
               In genealogy, cousins share common ancestors (such as grandparents or great-grandparents). The degree ("first", "second") indicates how many generations back the common ancestor is, while "removed" accounts for differences in generational level.
@@ -201,10 +210,12 @@ export const RelationshipFinderPage: React.FC = () => {
 
         </div>
       ) : (
-        <div className="p-12 text-center bg-white rounded-3xl border border-stone-200 text-stone-400 space-y-2">
-          <HelpCircle className="w-8 h-8 mx-auto text-stone-300" />
+        <div className="p-12 text-center bg-white dark:bg-stone-900 rounded-3xl border border-stone-200 dark:border-stone-800 text-stone-400 dark:text-stone-500 space-y-2">
+          <HelpCircle className="w-8 h-8 mx-auto text-stone-300 dark:text-stone-600" />
           <p className="text-xs">No kinship connection found between the selected members in the current tree graph.</p>
         </div>
+      )}
+      </>
       )}
 
     </div>

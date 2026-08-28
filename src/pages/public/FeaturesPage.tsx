@@ -7,9 +7,7 @@ import {
   BookOpen, 
   FileText, 
   Calendar, 
-  Users, 
   ShieldCheck, 
-  Search, 
   Download, 
   Clock, 
   Split,
@@ -85,11 +83,11 @@ export const FeaturesPage: React.FC = () => {
     <div className="max-w-7xl mx-auto px-6 py-16 space-y-16">
       
       <div className="text-center space-y-4 max-w-3xl mx-auto">
-        <span className="text-xs font-bold uppercase tracking-widest text-forest-700">Platform Capabilities</span>
-        <h1 className="font-serif text-4xl sm:text-5xl font-bold text-stone-900">
+        <span className="text-xs font-bold uppercase tracking-widest text-forest-700 dark:text-forest-400">Platform Capabilities</span>
+        <h1 className="font-serif text-4xl sm:text-5xl font-bold text-stone-900 dark:text-stone-100">
           A Complete Genealogical Platform for Modern Families
         </h1>
-        <p className="text-stone-600 text-sm leading-relaxed">
+        <p className="text-stone-600 dark:text-stone-300 text-sm leading-relaxed">
           Explore the rich feature suite built specifically for family historians, researchers, and close-knit relatives.
         </p>
       </div>
@@ -98,18 +96,18 @@ export const FeaturesPage: React.FC = () => {
         {featureList.map((f, idx) => {
           const Icon = f.icon;
           return (
-            <div key={idx} className="p-6 rounded-3xl bg-white border border-stone-200 shadow-soft hover:shadow-elevated transition">
-              <div className="w-10 h-10 rounded-xl bg-forest-100 text-forest-800 flex items-center justify-center mb-4">
+            <div key={idx} className="p-6 rounded-3xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-soft hover:shadow-elevated transition">
+              <div className="w-10 h-10 rounded-xl bg-forest-100 dark:bg-forest-900/60 text-forest-800 dark:text-forest-300 flex items-center justify-center mb-4">
                 <Icon className="w-5 h-5" />
               </div>
-              <h3 className="font-serif font-bold text-base text-stone-900 mb-2">{f.title}</h3>
-              <p className="text-xs text-stone-600 leading-relaxed">{f.desc}</p>
+              <h3 className="font-serif font-bold text-base text-stone-900 dark:text-stone-100 mb-2">{f.title}</h3>
+              <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed">{f.desc}</p>
             </div>
           );
         })}
       </div>
 
-      <div className="p-8 rounded-3xl bg-gradient-to-r from-forest-800 to-forest-900 text-white text-center space-y-4">
+      <div className="p-8 rounded-3xl bg-gradient-to-r from-forest-800 to-forest-900 text-white text-center space-y-4 shadow-lg">
         <h3 className="font-serif font-bold text-2xl">Experience All Features in the Interactive Demo</h3>
         <p className="text-xs text-forest-200 max-w-xl mx-auto">
           Explore a pre-seeded 4-generation family tree with all features unlocked.

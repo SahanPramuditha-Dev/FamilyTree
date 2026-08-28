@@ -36,6 +36,56 @@
     @apply bg-stone-100 text-stone-900 dark:bg-stone-950 dark:text-stone-100 transition-colors duration-200;
   }
 
+  .dark input,
+  .dark select,
+  .dark textarea {
+    color: #f5f5f4 !important;
+  }
+
+  /* Universal Dark Theme Surfaces & Typography */
+  .dark .bg-white:not(.bg-white-keep) {
+    background-color: #1c1917 !important;
+  }
+
+  .dark .bg-stone-50 {
+    background-color: #24201e !important;
+  }
+
+  .dark .border-stone-200,
+  .dark .border-stone-200\/80,
+  .dark .border-stone-200\/70,
+  .dark .border-stone-200\/60 {
+    border-color: #292524 !important;
+  }
+
+  .dark .border-stone-100 {
+    border-color: #292524 !important;
+  }
+
+  .dark .text-stone-900 {
+    color: #f5f5f4 !important;
+  }
+
+  .dark .text-stone-800 {
+    color: #e7e5e4 !important;
+  }
+
+  .dark .text-stone-700 {
+    color: #d6d3d1 !important;
+  }
+
+  .dark .text-stone-600 {
+    color: #a8a29e !important;
+  }
+
+  .dark .text-stone-500 {
+    color: #a8a29e !important;
+  }
+
+  .dark .text-stone-400 {
+    color: #78716c !important;
+  }
+
   h1, h2, h3, .font-serif {
     font-family: 'Playfair Display', Georgia, serif;
   }
@@ -78,3 +128,103 @@
     display: none !important;
   }
 }
+
+/* React Flow Dark Theme Controls */
+.react-flow__controls {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+  border: 1px solid #292524 !important;
+  border-radius: 1rem !important;
+  overflow: hidden !important;
+}
+
+.react-flow__controls-button {
+  background-color: #1c1917 !important;
+  border: none !important;
+  border-bottom: 1px solid #292524 !important;
+  fill: #e7e5e4 !important;
+  color: #e7e5e4 !important;
+  transition: all 0.15s ease !important;
+}
+
+.react-flow__controls-button:last-child {
+  border-bottom: none !important;
+}
+
+.react-flow__controls-button:hover {
+  background-color: #292524 !important;
+  fill: #ffffff !important;
+}
+
+.react-flow__controls-button svg {
+  fill: currentColor !important;
+  max-width: 14px !important;
+  max-height: 14px !important;
+}
+
+/* Leaflet Animated Migration Flows & Beacons */
+@keyframes mapDashFlow {
+  to {
+    stroke-dashoffset: -32;
+  }
+}
+
+.leaflet-migration-flow path {
+  stroke-dasharray: 8, 8;
+  animation: mapDashFlow 1.2s linear infinite;
+}
+
+@keyframes mapRadarRipple {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+.map-radar-pulse {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-radius: 9999px;
+  background: rgba(16, 185, 129, 0.4);
+  animation: mapRadarRipple 1.8s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+  pointer-events: none;
+}
+
+/* Leaflet Dark Theme Tooltips & Popups */
+.dark .leaflet-tooltip,
+.dark .leaflet-popup-content-wrapper {
+  background-color: #1c1917 !important;
+  color: #f5f5f4 !important;
+  border: 1px solid #3b3633 !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.6) !important;
+}
+
+.dark .leaflet-popup-tip {
+  background-color: #1c1917 !important;
+}
+
+.dark .leaflet-tooltip-left:before {
+  border-left-color: #1c1917 !important;
+}
+.dark .leaflet-tooltip-right:before {
+  border-right-color: #1c1917 !important;
+}
+.dark .leaflet-tooltip-top:before {
+  border-top-color: #1c1917 !important;
+}
+.dark .leaflet-tooltip-bottom:before {
+  border-bottom-color: #1c1917 !important;
+}
+
+.leaflet-tooltip {
+  border-radius: 0.875rem !important;
+  padding: 0.25rem !important;
+  box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.15) !important;
+}
+
+

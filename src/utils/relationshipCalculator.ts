@@ -70,8 +70,18 @@ export function findRelationship(
       adj.get(m.id)!.push({ targetId: sId, label });
     });
 
-    // Siblings
-    m.siblingIds.forEach(sId => {
+    // Siblings (explicit + shared parents)
+    const knownSiblingIds = new Set(m.siblingIds);
+    m.parentIds.forEach(pId => {
+      const p = memberMap.get(pId);
+      if (p) {
+        p.childIds.forEach(cId => {
+          if (cId !== m.id) knownSiblingIds.add(cId);
+        });
+      }
+    });
+
+    knownSiblingIds.forEach(sId => {
       const s = memberMap.get(sId);
       const label = s?.gender === 'female' ? 'Sister' : 'Brother';
       adj.get(m.id)!.push({ targetId: sId, label });

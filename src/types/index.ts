@@ -1,3 +1,6 @@
+export * from './geography';
+import { LocationDetails, MigrationEvent } from './geography';
+
 export type Gender = 'male' | 'female' | 'other';
 
 export type RelationshipType = 
@@ -23,8 +26,10 @@ export interface FamilyMember {
   isLiving: boolean;
   birthDate?: string; // YYYY-MM-DD
   birthPlace?: string;
+  birthPlaceDetails?: LocationDetails;
   deathDate?: string; // YYYY-MM-DD
   deathPlace?: string;
+  placeOfPassingDetails?: LocationDetails;
   avatarUrl?: string;
   occupation?: string;
   education?: string;
@@ -34,10 +39,24 @@ export interface FamilyMember {
   email?: string;
   phone?: string;
   currentLocation?: string;
+  currentLocationDetails?: LocationDetails;
   coordinates?: [number, number]; // [lat, lng] for interactive map
+  marriageDate?: string; // YYYY-MM-DD
+  marriageLocation?: string;
+  marriageLocationDetails?: LocationDetails;
+  migrations?: MigrationEvent[];
   createdAt: string;
   updatedAt: string;
   
+  // Traditional Sri Lankan / Heritage Lineage attributes
+  geName?: string; // e.g. "Kuruppu Arachchige", "Hewa Walawwe", "Aluthge"
+  geNameNative?: string; // e.g. "කුරුප්පු ආරච්චිගේ"
+  nameNative?: string; // Native script name (e.g. "අමල් දිනංජ" / "அமல்")
+  ancestralEstate?: string; // Ancestral seat / Maha Gedara / Walauwa
+  clanEmblem?: string; // Icon or emblem identifier
+  clanCrestUrl?: string; // URL for family crest image
+  audioBioUrl?: string; // Oral history voice memo URL
+
   // Direct relationship cache for fast traversal
   parentIds: string[];
   spouseIds: string[];
@@ -212,10 +231,15 @@ export interface Family {
   name: string;
   motto?: string;
   description?: string;
+  geName?: string; // Traditional Vasagama / Ge-Name
+  geNameNative?: string; // Sinhala/Tamil script Ge-name
+  ancestralEstate?: string; // Maha Gedara / Walauwa name & village
   originCountry: string;
   originRegion?: string;
+  originLocationDetails?: LocationDetails;
   coverPhotoUrl?: string;
   crestUrl?: string;
+  clanEmblem?: string;
   foundedYear?: string;
   privacy: PrivacySettings;
   ownerId: string;

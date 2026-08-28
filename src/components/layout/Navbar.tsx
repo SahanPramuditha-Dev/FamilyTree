@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useFamily } from '../../context/FamilyContext';
+import { useFamilyAccess } from '../../hooks/useFamilyAccess';
 import { 
   Search, 
   Bell, 
@@ -23,9 +24,11 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch, onOpenAddMember }) => {
-  const { user, logout, quickDemoLogin } = useAuth();
+  const { user, logout } = useAuth();
   const { family, notifications, markNotificationRead, markAllNotificationsRead } = useFamily();
+  const { canEditMembers } = useFamilyAccess();
   const navigate = useNavigate();
+  const [avatarError, setAvatarError] = useState(false);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
@@ -45,10 +48,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch, onOpenAddMember })
   // User Profile Trigger Button
   const userTrigger = (
     <div className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 transition cursor-pointer">
-      {user?.photoURL ? (
+      {user?.photoURL && !avatarError ? (
         <img 
           src={user.photoURL} 
-          alt={user.displayName}
+          alt={user.displayName || 'User'}
+          onError={() => setAvatarError(true)}
           className="w-8 h-8 rounded-xl object-cover border border-stone-200 dark:border-stone-700 shadow-xs" 
         />
       ) : (
@@ -68,14 +72,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch, onOpenAddMember })
           <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-forest-800 to-forest-600 dark:from-forest-700 dark:to-forest-500 text-white flex items-center justify-center shadow-md shadow-forest-900/10">
             <Trees className="w-5 h-5 text-forest-100" />
           </div>
-          <div>
-            <span className="font-serif font-bold text-stone-900 dark:text-stone-100 text-base leading-tight block">
-              Roots & Heritage
-            </span>
-            <span className="text-[11px] font-medium text-forest-700 dark:text-forest-400 block truncate max-w-[140px] sm:max-w-[200px]">
-              {family.name}
-            </span>
-          </div>
+            <div>
+              <span className="font-serif font-bold text-stone-900 dark:text-stone-100 text-base leading-tight block">
+                FamilyTree
+              </span>
+              <span className="text-[11px] font-medium text-forest-700 dark:text-forest-400 block truncate max-w-[140px] sm:max-w-[200px]">
+                {family.name}
+              </span>
+            </div>
         </Link>
       </div>
 
@@ -109,14 +113,15 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch, onOpenAddMember })
           <Search className="w-4 h-4" />
         </button>
 
-        {/* Quick Add Member button */}
-        <button
-          onClick={onOpenAddMember}
-          className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-forest-700 hover:bg-forest-800 dark:bg-forest-600 dark:hover:bg-forest-500 text-white text-xs font-semibold shadow-sm transition active:scale-95"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span>Add Member</span>
-        </button>
+        {canEditMembers && (
+          <button
+            onClick={onOpenAddMember}
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-forest-700 hover:bg-forest-800 dark:bg-forest-600 dark:hover:bg-forest-500 text-white text-xs font-semibold shadow-sm transition active:scale-95"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add Member</span>
+          </button>
+        )}
 
         {/* Centralised Notifications Dropdown */}
         <Dropdown trigger={notificationTrigger} width="w-80 sm:w-96" align="right">
@@ -139,9 +144,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch, onOpenAddMember })
             )}
           </div>
 
-          <div className="max-h-72 overflow-y-auto divide-y divide-stone-100 dark:divide-stone-800">
+          <div className="divide-y divide-stone-100 dark:divide-stone-800 max-h-72 overflow-y-auto">
             {notifications.length === 0 ? (
-              <p className="p-4 text-xs text-stone-400 dark:text-stone-500 text-center">No notifications yet.</p>
+              <div className="p-6 text-center text-xs text-stone-400">
+                No notifications
+              </div>
             ) : (
               notifications.map((notif) => (
                 <div 
@@ -188,30 +195,18 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch, onOpenAddMember })
               Family Settings
             </DropdownItem>
             <DropdownItem 
+              icon={<Sparkles className="w-3.5 h-3.5 text-amber-500" />}
+              onClick={() => navigate('/onboarding')}
+            >
+              Run Setup Wizard
+            </DropdownItem>
+            <DropdownItem 
               icon={<Shield className="w-3.5 h-3.5" />}
               onClick={() => navigate('/privacy')}
             >
               Privacy Center
             </DropdownItem>
           </div>
-
-          <DropdownDivider />
-
-          <div className="px-3.5 py-1 text-[10px] font-bold text-stone-400 uppercase">
-            Demo Persona Switch
-          </div>
-          <DropdownItem
-            onClick={() => quickDemoLogin('owner')}
-            badge={<Sparkles className="w-3 h-3 text-amber-500" />}
-          >
-            Family Owner
-          </DropdownItem>
-          <DropdownItem onClick={() => quickDemoLogin('admin')}>
-            Family Admin
-          </DropdownItem>
-          <DropdownItem onClick={() => quickDemoLogin('viewer')}>
-            Guest Viewer
-          </DropdownItem>
 
           <DropdownDivider />
 

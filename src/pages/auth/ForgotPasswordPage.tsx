@@ -17,26 +17,26 @@ export const ForgotPasswordPage: React.FC = () => {
 
   return (
     <div className="min-h-[85vh] flex items-center justify-center px-4 py-12">
-      <div className="bg-white rounded-3xl shadow-elevated border border-stone-200/80 max-w-md w-full p-8 space-y-6">
+      <div className="bg-white dark:bg-stone-900 rounded-3xl shadow-elevated border border-stone-200/80 dark:border-stone-800 max-w-md w-full p-8 space-y-6">
         
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-2xl bg-forest-900 text-white flex items-center justify-center mx-auto shadow-md">
+          <div className="w-12 h-12 rounded-2xl bg-forest-900 dark:bg-forest-800 text-white flex items-center justify-center mx-auto shadow-md">
             <Trees className="w-6 h-6 text-forest-200" />
           </div>
-          <h2 className="font-serif text-2xl font-bold text-stone-900">Reset Password</h2>
-          <p className="text-xs text-stone-500">We will send password reset instructions to your email</p>
+          <h2 className="font-serif text-2xl font-bold text-stone-900 dark:text-stone-100">Reset Password</h2>
+          <p className="text-xs text-stone-500 dark:text-stone-400">We will send password reset instructions to your email</p>
         </div>
 
         {submitted ? (
-          <div className="p-6 rounded-2xl bg-forest-50 border border-forest-200 text-center space-y-3">
-            <CheckCircle2 className="w-10 h-10 text-forest-700 mx-auto" />
-            <h4 className="font-bold text-sm text-stone-900">Check Your Inbox</h4>
-            <p className="text-xs text-stone-600">
+          <div className="p-6 rounded-2xl bg-forest-50 dark:bg-forest-950/50 border border-forest-200 dark:border-forest-800 text-center space-y-3">
+            <CheckCircle2 className="w-10 h-10 text-forest-700 dark:text-forest-400 mx-auto" />
+            <h4 className="font-bold text-sm text-stone-900 dark:text-stone-100">Check Your Inbox</h4>
+            <p className="text-xs text-stone-600 dark:text-stone-400">
               If an account exists for <strong>{email}</strong>, a recovery link has been delivered.
             </p>
             <Link
               to="/login"
-              className="inline-block pt-2 text-xs font-bold text-forest-700 hover:underline"
+              className="inline-block pt-2 text-xs font-bold text-forest-700 dark:text-forest-400 hover:underline"
             >
               Return to Login
             </Link>
@@ -44,18 +44,18 @@ export const ForgotPasswordPage: React.FC = () => {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-stone-700 mb-1">
+              <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
                 Account Email
               </label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-stone-400 absolute left-3.5 top-3" />
+                <Mail className="w-4 h-4 text-stone-400 dark:text-stone-500 absolute left-3.5 top-3" />
                 <input
                   type="email"
                   required
                   placeholder="name@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 text-xs rounded-xl border border-stone-300 focus:border-forest-500 focus:ring-forest-500 p-2.5 shadow-sm"
+                  className="w-full pl-10 text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 focus:border-forest-500 focus:ring-forest-500 p-2.5 shadow-sm"
                 />
               </div>
             </div>
@@ -70,7 +70,7 @@ export const ForgotPasswordPage: React.FC = () => {
         )}
 
         <div className="pt-2 text-center">
-          <Link to="/login" className="inline-flex items-center gap-1 text-xs text-stone-500 hover:text-stone-800 font-medium">
+          <Link to="/login" className="inline-flex items-center gap-1 text-xs text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 font-medium">
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back to Sign In</span>
           </Link>

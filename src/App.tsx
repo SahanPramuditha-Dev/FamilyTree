@@ -4,8 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import { FamilyProvider } from './context/FamilyContext';
 import { ThemeProvider } from './context/ThemeContext';
 
-// Layouts
-import { PublicLayout } from './components/layout/PublicLayout';
+import { ProtectedRoute, AdminRoute } from './components/auth/ProtectedRoute';
 import { AppLayout } from './components/layout/AppLayout';
 
 // Public Pages
@@ -18,10 +17,13 @@ import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
 import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
 import { OnboardingPage } from './pages/onboarding/OnboardingPage';
+import { InviteJoinPage } from './pages/invite/InviteJoinPage';
 
-// Authenticated App Pages
+// Layouts
+import { PublicLayout } from './components/layout/PublicLayout';
 import { DashboardPage } from './pages/dashboard/DashboardPage';
 import { InteractiveTreePage } from './pages/tree/InteractiveTreePage';
+import { PublicTreePage } from './pages/tree/PublicTreePage';
 import { MembersListPage } from './pages/members/MembersListPage';
 import { MemberProfilePage } from './pages/members/MemberProfilePage';
 import { BranchesPage } from './pages/branches/BranchesPage';
@@ -32,6 +34,7 @@ import { PhotosPage } from './pages/photos/PhotosPage';
 import { StoriesPage } from './pages/stories/StoriesPage';
 import { DocumentsPage } from './pages/documents/DocumentsPage';
 import { FamilyMapPage } from './pages/map/FamilyMapPage';
+import { GenealogyVisualizerPage } from './pages/visualizations/GenealogyVisualizerPage';
 import { ReportsPage } from './pages/reports/ReportsPage';
 import { ExportPrintPage } from './pages/export/ExportPrintPage';
 import { CollaborationPage } from './pages/collaboration/CollaborationPage';
@@ -63,16 +66,23 @@ export function App() {
             </Route>
 
             {/* Onboarding Wizard */}
-            <Route path="/onboarding" element={<OnboardingPage />} />
+            <Route element={<ProtectedRoute />}>
+              <Route path="/onboarding" element={<OnboardingPage />} />
+            </Route>
+
+            <Route path="/invite/join" element={<InviteJoinPage />} />
+            <Route path="/tree/public/:familyId" element={<PublicTreePage />} />
 
             {/* Authenticated App Layout Routes */}
-            <Route element={<AppLayout />}>
+            <Route element={<ProtectedRoute />}>
+              <Route element={<AppLayout />}>
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/tree" element={<InteractiveTreePage />} />
               <Route path="/members" element={<MembersListPage />} />
               <Route path="/members/:id" element={<MemberProfilePage />} />
               <Route path="/branches" element={<BranchesPage />} />
               <Route path="/relationships" element={<RelationshipFinderPage />} />
+              <Route path="/visualizations" element={<GenealogyVisualizerPage />} />
               <Route path="/timeline" element={<TimelinePage />} />
               <Route path="/events" element={<EventsPage />} />
               <Route path="/photos" element={<PhotosPage />} />
@@ -86,7 +96,14 @@ export function App() {
               <Route path="/activity" element={<ActivityLogsPage />} />
               <Route path="/settings/family" element={<FamilySettingsPage />} />
               <Route path="/settings/account" element={<AccountSettingsPage />} />
+              </Route>
+            </Route>
+
+            {/* Admin-only route — requires role === 'admin' */}
+            <Route element={<AdminRoute />}>
+              <Route element={<AppLayout />}>
               <Route path="/admin" element={<AdminDashboardPage />} />
+              </Route>
             </Route>
 
             {/* Catch-all redirect */}

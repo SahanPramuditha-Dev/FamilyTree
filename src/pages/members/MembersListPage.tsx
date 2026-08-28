@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useFamily } from '../../context/FamilyContext';
+import { useFamilyAccess } from '../../hooks/useFamilyAccess';
 import { useNavigate } from 'react-router-dom';
 import { SelectDropdown } from '../../components/ui/Dropdown';
 import { AddMemberModal } from '../../components/modals/AddMemberModal';
@@ -22,6 +23,7 @@ import { FamilyMember } from '../../types';
 
 export const MembersListPage: React.FC = () => {
   const { members, branches, deleteMember } = useFamily();
+  const { maskMembers, canEditMembers, canDeleteMembers } = useFamilyAccess();
   const navigate = useNavigate();
 
   const [search, setSearch] = useState('');
@@ -33,8 +35,10 @@ export const MembersListPage: React.FC = () => {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<FamilyMember | undefined>(undefined);
 
+  const visibleMembers = useMemo(() => maskMembers(members), [members, maskMembers]);
+
   const filteredMembers = useMemo(() => {
-    return members.filter(m => {
+    return visibleMembers.filter(m => {
       const matchQuery = `${m.firstName} ${m.middleName || ''} ${m.lastName} ${m.nickname || ''} ${m.occupation || ''}`.toLowerCase().includes(search.toLowerCase());
       const matchBranch = selectedBranch === 'all' || m.branchId === selectedBranch;
       const matchGen = selectedGen === 'all' || m.generation === Number(selectedGen);
@@ -42,7 +46,7 @@ export const MembersListPage: React.FC = () => {
 
       return matchQuery && matchBranch && matchGen && matchStatus;
     });
-  }, [members, search, selectedBranch, selectedGen, statusFilter]);
+  }, [visibleMembers, search, selectedBranch, selectedGen, statusFilter]);
 
   const branchMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -56,30 +60,32 @@ export const MembersListPage: React.FC = () => {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-stone-900">
+          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-stone-900 dark:text-stone-100">
             Family Directory
           </h1>
-          <p className="text-xs text-stone-500 mt-1">
+          <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">
             Browse and manage all {members.length} registered individuals in your family lineage.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => {
-              setEditingMember(undefined);
-              setIsAddOpen(true);
-            }}
-            className="px-4 py-2.5 bg-forest-700 hover:bg-forest-800 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 active:scale-95"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Add Member</span>
-          </button>
-        </div>
+        {canEditMembers && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                setEditingMember(undefined);
+                setIsAddOpen(true);
+              }}
+              className="px-4 py-2.5 bg-forest-700 hover:bg-forest-800 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 active:scale-95"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Add Member</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white p-4 rounded-3xl border border-stone-200 shadow-soft flex flex-wrap items-center justify-between gap-3">
+      <div className="bg-white dark:bg-stone-900 p-4 rounded-3xl border border-stone-200 dark:border-stone-800 shadow-soft flex flex-wrap items-center justify-between gap-3">
         
         {/* Search */}
         <div className="relative flex-1 min-w-[200px]">
@@ -89,7 +95,7 @@ export const MembersListPage: React.FC = () => {
             placeholder="Search by name, nickname, occupation..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-stone-200 focus:border-forest-500 focus:ring-forest-500"
+            className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 focus:border-forest-500 focus:ring-forest-500"
           />
         </div>
 
@@ -133,14 +139,14 @@ export const MembersListPage: React.FC = () => {
           <div className="flex items-center bg-stone-100 dark:bg-stone-800 p-1 rounded-xl border border-stone-200 dark:border-stone-700">
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-1.5 rounded-lg ${viewMode === 'grid' ? 'bg-white shadow-xs text-forest-800' : 'text-stone-400'}`}
+              className={`p-1.5 rounded-lg ${viewMode === 'grid' ? 'bg-white dark:bg-stone-700 shadow-xs text-forest-800 dark:text-forest-300' : 'text-stone-400'}`}
               title="Grid View"
             >
               <Grid className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => setViewMode('table')}
-              className={`p-1.5 rounded-lg ${viewMode === 'table' ? 'bg-white shadow-xs text-forest-800' : 'text-stone-400'}`}
+              className={`p-1.5 rounded-lg ${viewMode === 'table' ? 'bg-white dark:bg-stone-700 shadow-xs text-forest-800 dark:text-forest-300' : 'text-stone-400'}`}
               title="Table View"
             >
               <List className="w-3.5 h-3.5" />
@@ -151,7 +157,12 @@ export const MembersListPage: React.FC = () => {
       </div>
 
       {/* Members Output */}
-      {viewMode === 'grid' ? (
+      {filteredMembers.length === 0 ? (
+        <div className="p-12 text-center bg-white dark:bg-stone-900 rounded-3xl border border-stone-200 dark:border-stone-800 text-stone-400 space-y-2">
+          <Users className="w-8 h-8 mx-auto text-stone-300 dark:text-stone-600" />
+          <p className="text-xs">No family members found matching your search and filter criteria.</p>
+        </div>
+      ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {filteredMembers.map((m) => {
             const branchName = m.branchId ? branchMap.get(m.branchId) : null;
@@ -159,56 +170,56 @@ export const MembersListPage: React.FC = () => {
               <div
                 key={m.id}
                 onClick={() => navigate(`/members/${m.id}`)}
-                className="bg-white rounded-3xl p-4 border border-stone-200 shadow-soft hover:shadow-elevated hover:border-forest-300 cursor-pointer transition flex flex-col justify-between group"
+                className="bg-white dark:bg-stone-900 rounded-3xl p-4 border border-stone-200 dark:border-stone-800 shadow-soft hover:shadow-elevated hover:border-forest-300 dark:hover:border-forest-600 cursor-pointer transition flex flex-col justify-between group"
               >
                 <div>
                   <div className="flex items-start justify-between gap-2 mb-3">
                     {branchName ? (
-                      <span className="text-[10px] bg-forest-100 text-forest-800 font-bold px-2 py-0.5 rounded-full truncate max-w-[150px]">
+                      <span className="text-[10px] bg-forest-100 dark:bg-forest-950/60 text-forest-800 dark:text-forest-300 font-bold px-2 py-0.5 rounded-full truncate max-w-[150px] border border-transparent dark:border-forest-800/40">
                         {branchName}
                       </span>
                     ) : <div />}
 
-                    <span className="text-[10px] text-stone-400 font-mono font-semibold">
+                    <span className="text-[10px] text-stone-400 dark:text-stone-500 font-mono font-semibold">
                       Gen {m.generation}
                     </span>
                   </div>
 
                   <div className="flex items-center gap-3">
                     {m.avatarUrl ? (
-                      <img src={m.avatarUrl} alt="" className="w-12 h-12 rounded-2xl object-cover border border-stone-200" />
+                      <img src={m.avatarUrl} alt="" className="w-12 h-12 rounded-2xl object-cover border border-stone-200 dark:border-stone-700" />
                     ) : (
-                      <div className="w-12 h-12 rounded-2xl bg-forest-100 text-forest-800 font-serif font-bold flex items-center justify-center text-sm">
+                      <div className="w-12 h-12 rounded-2xl bg-forest-100 dark:bg-forest-950 text-forest-800 dark:text-forest-300 font-serif font-bold flex items-center justify-center text-sm border border-forest-200 dark:border-forest-800/40">
                         {m.firstName.charAt(0)}
                       </div>
                     )}
                     <div className="min-w-0 flex-1">
-                      <h3 className="font-serif font-bold text-sm text-stone-900 group-hover:text-forest-700 truncate">
+                      <h3 className="font-serif font-bold text-sm text-stone-900 dark:text-stone-100 group-hover:text-forest-700 dark:group-hover:text-forest-400 truncate">
                         {m.firstName} {m.lastName}
                       </h3>
                       {m.maidenName && (
-                        <p className="text-[11px] text-stone-500 italic truncate">née {m.maidenName}</p>
+                        <p className="text-[11px] text-stone-500 dark:text-stone-400 italic truncate">née {m.maidenName}</p>
                       )}
-                      <p className="text-[11px] text-stone-600 truncate mt-0.5">{m.occupation || (m.isLiving ? 'Living' : 'Deceased')}</p>
+                      <p className="text-[11px] text-stone-600 dark:text-stone-300 truncate mt-0.5">{m.occupation || (m.isLiving ? 'Living' : 'Deceased')}</p>
                     </div>
                   </div>
 
                   {/* Metadata */}
-                  <div className="mt-4 pt-3 border-t border-stone-100 text-[11px] text-stone-500 space-y-1">
+                  <div className="mt-4 pt-3 border-t border-stone-100 dark:border-stone-800/80 text-[11px] text-stone-500 dark:text-stone-400 space-y-1">
                     <div className="flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5 text-stone-400" />
+                      <Calendar className="w-3.5 h-3.5 text-stone-400 dark:text-stone-500" />
                       <span>{m.birthDate ? m.birthDate.split('-')[0] : '?'} — {m.isLiving ? 'Present' : (m.deathDate ? m.deathDate.split('-')[0] : '✝')}</span>
                     </div>
                     {m.birthPlace && (
                       <div className="flex items-center gap-1.5 truncate">
-                        <MapPin className="w-3.5 h-3.5 text-stone-400 flex-shrink-0" />
+                        <MapPin className="w-3.5 h-3.5 text-stone-400 dark:text-stone-500 flex-shrink-0" />
                         <span className="truncate">{m.birthPlace}</span>
                       </div>
                     )}
                   </div>
                 </div>
 
-                <div className="mt-3 pt-2 flex items-center justify-between text-xs text-forest-700 font-medium">
+                <div className="mt-3 pt-2 flex items-center justify-between text-xs text-forest-700 dark:text-forest-400 font-medium">
                   <span>View Profile & Timeline</span>
                   <ExternalLink className="w-3.5 h-3.5" />
                 </div>
@@ -218,9 +229,9 @@ export const MembersListPage: React.FC = () => {
         </div>
       ) : (
         /* Table View */
-        <div className="bg-white rounded-3xl border border-stone-200 overflow-hidden shadow-soft">
+        <div className="bg-white dark:bg-stone-900 rounded-3xl border border-stone-200 dark:border-stone-800 overflow-hidden shadow-soft">
           <table className="w-full text-left text-xs">
-            <thead className="bg-stone-50 border-b border-stone-200 text-stone-500 uppercase tracking-wider font-semibold">
+            <thead className="bg-stone-50 dark:bg-stone-800/60 border-b border-stone-200 dark:border-stone-700 text-stone-500 dark:text-stone-400 uppercase tracking-wider font-semibold">
               <tr>
                 <th className="p-4">Name</th>
                 <th className="p-4">Generation</th>
@@ -231,46 +242,60 @@ export const MembersListPage: React.FC = () => {
                 <th className="p-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-stone-100 text-stone-700">
+            <tbody className="divide-y divide-stone-100 dark:divide-stone-800 text-stone-700 dark:text-stone-300">
               {filteredMembers.map((m) => (
-                <tr key={m.id} className="hover:bg-stone-50 transition cursor-pointer" onClick={() => navigate(`/members/${m.id}`)}>
-                  <td className="p-4 font-bold text-stone-900 flex items-center gap-3">
+                <tr key={m.id} className="hover:bg-stone-50 dark:hover:bg-stone-800/40 transition cursor-pointer" onClick={() => navigate(`/members/${m.id}`)}>
+                  <td className="p-4 font-bold text-stone-900 dark:text-stone-100 flex items-center gap-3">
                     {m.avatarUrl ? (
-                      <img src={m.avatarUrl} alt="" className="w-8 h-8 rounded-lg object-cover" />
+                      <img src={m.avatarUrl} alt="" className="w-8 h-8 rounded-lg object-cover border border-stone-200 dark:border-stone-700" />
                     ) : (
-                      <div className="w-8 h-8 rounded-lg bg-forest-100 text-forest-800 font-bold flex items-center justify-center text-xs">
+                      <div className="w-8 h-8 rounded-lg bg-forest-100 dark:bg-forest-950 text-forest-800 dark:text-forest-300 font-bold flex items-center justify-center text-xs">
                         {m.firstName.charAt(0)}
                       </div>
                     )}
-                    <span>{m.firstName} {m.lastName} {m.nickname && <span className="font-normal text-stone-500">({m.nickname})</span>}</span>
+                    <span>{m.firstName} {m.lastName} {m.nickname && <span className="font-normal text-stone-500 dark:text-stone-400">({m.nickname})</span>}</span>
                   </td>
-                  <td className="p-4 font-mono font-semibold">Gen {m.generation}</td>
+                  <td className="p-4 font-mono font-semibold text-stone-600 dark:text-stone-300">Gen {m.generation}</td>
                   <td className="p-4">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${m.isLiving ? 'bg-emerald-100 text-emerald-800' : 'bg-stone-200 text-stone-700'}`}>
-                      {m.isLiving ? 'Living' : 'Deceased'}
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${m.isLiving ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300' : 'bg-stone-200 dark:bg-stone-800 text-stone-700 dark:text-stone-300'}`}>
+                      {m.isLiving ? 'Living' : 'Deceased ✝'}
                     </span>
                   </td>
-                  <td className="p-4">{m.birthDate || 'Unknown'} — {m.isLiving ? 'Present' : (m.deathDate || 'Deceased')}</td>
-                  <td className="p-4">{m.branchId ? branchMap.get(m.branchId) : '—'}</td>
-                  <td className="p-4 truncate max-w-[150px]">{m.occupation || '—'}</td>
+                  <td className="p-4 text-stone-600 dark:text-stone-400">
+                    {m.birthDate ? m.birthDate.split('-')[0] : '?'} — {m.isLiving ? 'Present' : (m.deathDate ? m.deathDate.split('-')[0] : '✝')}
+                  </td>
+                  <td className="p-4">
+                    {m.branchId && branchMap.get(m.branchId) ? (
+                      <span className="text-[10px] bg-forest-100 dark:bg-forest-950 text-forest-800 dark:text-forest-300 font-bold px-2 py-0.5 rounded-full">
+                        {branchMap.get(m.branchId)}
+                      </span>
+                    ) : (
+                      <span className="text-stone-400 dark:text-stone-600">—</span>
+                    )}
+                  </td>
+                  <td className="p-4 text-stone-600 dark:text-stone-400">{m.occupation || '—'}</td>
                   <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      onClick={() => {
-                        setEditingMember(m);
-                        setIsAddOpen(true);
-                      }}
-                      className="p-1 text-stone-400 hover:text-stone-700 mr-2"
-                      title="Edit"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => deleteMember(m.id)}
-                      className="p-1 text-stone-400 hover:text-rose-600"
-                      title="Delete"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {canEditMembers && (
+                      <button
+                        onClick={() => {
+                          setEditingMember(members.find(item => item.id === m.id));
+                          setIsAddOpen(true);
+                        }}
+                        className="p-1 text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 mr-2"
+                        title="Edit"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                    )}
+                    {canDeleteMembers && (
+                      <button
+                        onClick={() => deleteMember(m.id)}
+                        className="p-1 text-stone-400 hover:text-rose-600 dark:hover:text-rose-400"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useFamily } from '../../context/FamilyContext';
 import { useAuth } from '../../context/AuthContext';
+import { useFamilyAccess } from '../../hooks/useFamilyAccess';
 import { 
   LayoutDashboard, 
   GitFork, 
@@ -23,7 +24,8 @@ import {
   ShieldAlert, 
   PlusCircle, 
   Printer,
-  Sparkles
+  Sparkles,
+  PieChart
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -34,6 +36,7 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddMember, onOpenInvite }) => {
   const { family, members, branches, photos, stories } = useFamily();
   const { user } = useAuth();
+  const { canEditMembers, canManageCollaborators } = useFamilyAccess();
   const navigate = useNavigate();
 
   const primaryNav = [
@@ -42,6 +45,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddMember, onOpenInvite 
     { to: '/members', label: 'Family Members', icon: Users, count: members.length },
     { to: '/branches', label: 'Family Branches', icon: Split, count: branches.length },
     { to: '/relationships', label: 'Relationship Finder', icon: Route, badge: 'Smart' },
+    { to: '/visualizations', label: 'Fan Chart & Simulator', icon: PieChart, badge: 'New' },
     { to: '/timeline', label: 'Family Timeline', icon: Clock },
     { to: '/events', label: 'Events & Reunions', icon: Calendar },
     { to: '/photos', label: 'Photo Archives', icon: Image, count: photos.length },
@@ -60,10 +64,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddMember, onOpenInvite 
   ];
 
   return (
-    <aside className="w-64 flex-shrink-0 bg-stone-900 text-stone-300 flex flex-col h-full select-none border-r border-stone-800">
+    <aside className="w-64 flex-shrink-0 bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-300 flex flex-col h-full select-none border-r border-stone-200 dark:border-stone-800">
       
       {/* Quick Action Bar */}
-      <div className="p-3.5 border-b border-stone-800 space-y-2">
+      <div className="p-3.5 border-b border-stone-200 dark:border-stone-800 space-y-2">
+        {canEditMembers && (
         <button
           onClick={onOpenAddMember}
           className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-forest-600 hover:bg-forest-500 text-white text-xs font-semibold shadow-md shadow-forest-950/40 transition active:scale-98"
@@ -71,19 +76,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddMember, onOpenInvite 
           <PlusCircle className="w-4 h-4" />
           <span>Add Family Member</span>
         </button>
+        )}
+        {canManageCollaborators && (
         <button
           onClick={onOpenInvite}
-          className="w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-medium border border-stone-700/60 transition"
+          className="w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-xl bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 text-xs font-medium border border-stone-200 dark:border-stone-700/60 transition"
         >
-          <UserPlus className="w-3.5 h-3.5 text-forest-400" />
+          <UserPlus className="w-3.5 h-3.5 text-forest-600 dark:text-forest-400" />
           <span>Invite Relatives</span>
         </button>
+        )}
       </div>
 
       {/* Main Navigation links */}
-      <div className="flex-1 overflow-y-auto py-3 px-3 space-y-6 scrollbar-thin scrollbar-thumb-stone-800">
+      <div className="flex-1 overflow-y-auto py-3 px-3 space-y-6 scrollbar-thin scrollbar-thumb-stone-200 dark:scrollbar-thumb-stone-800">
         <div>
-          <div className="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-stone-400">
+          <div className="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500">
             Genealogy & Heritage
           </div>
           <nav className="space-y-0.5">
@@ -96,8 +104,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddMember, onOpenInvite 
                   className={({ isActive }) =>
                     `flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition ${
                       isActive
-                        ? 'bg-forest-900/60 text-forest-300 font-semibold border-l-2 border-forest-400 pl-2.5'
-                        : 'text-stone-300 hover:bg-stone-800/70 hover:text-white'
+                        ? 'bg-forest-100 dark:bg-forest-900/60 text-forest-800 dark:text-forest-300 font-semibold border-l-2 border-forest-500 dark:border-forest-400 pl-2.5'
+                        : 'text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800/70 hover:text-stone-900 dark:hover:text-white'
                     }`
                   }
                 >
@@ -106,7 +114,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddMember, onOpenInvite 
                     <span className="truncate">{item.label}</span>
                   </div>
                   {item.badge && (
-                    <span className="text-[9px] bg-forest-500/20 text-forest-300 px-1.5 py-0.2 rounded-full font-bold">
+                    <span className="text-[9px] bg-forest-500/20 text-forest-700 dark:text-forest-300 px-1.5 py-0.2 rounded-full font-bold">
                       {item.badge}
                     </span>
                   )}
@@ -122,7 +130,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddMember, onOpenInvite 
         </div>
 
         <div>
-          <div className="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-stone-400">
+          <div className="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500">
             Governance & Privacy
           </div>
           <nav className="space-y-0.5">
@@ -135,8 +143,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddMember, onOpenInvite 
                   className={({ isActive }) =>
                     `flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition ${
                       isActive
-                        ? 'bg-forest-900/60 text-forest-300 font-semibold border-l-2 border-forest-400 pl-2.5'
-                        : 'text-stone-300 hover:bg-stone-800/70 hover:text-white'
+                        ? 'bg-forest-100 dark:bg-forest-900/60 text-forest-800 dark:text-forest-300 font-semibold border-l-2 border-forest-500 dark:border-forest-400 pl-2.5'
+                        : 'text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800/70 hover:text-stone-900 dark:hover:text-white'
                     }`
                   }
                 >
@@ -152,16 +160,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddMember, onOpenInvite 
                 className={({ isActive }) =>
                   `flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition ${
                     isActive
-                      ? 'bg-amber-950/60 text-amber-300 font-semibold'
-                      : 'text-amber-400 hover:bg-stone-800/70'
+                      ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-semibold'
+                      : 'text-amber-600 dark:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800/70'
                   }`
                 }
               >
                 <div className="flex items-center gap-2.5">
-                  <ShieldAlert className="w-4 h-4 flex-shrink-0 text-amber-400" />
+                  <ShieldAlert className="w-4 h-4 flex-shrink-0 text-amber-500 dark:text-amber-400" />
                   <span>Admin Dashboard</span>
                 </div>
-                <span className="text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded-full font-bold">
+                <span className="text-[9px] bg-amber-500/20 text-amber-700 dark:text-amber-300 px-1.5 py-0.2 rounded-full font-bold">
                   System
                 </span>
               </NavLink>
@@ -171,15 +179,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddMember, onOpenInvite 
       </div>
 
       {/* Footer Family summary card */}
-      <div className="p-3 bg-stone-950/80 border-t border-stone-800 text-[11px] text-stone-400">
-        <div className="flex items-center justify-between">
-          <span className="font-semibold text-stone-300 truncate max-w-[120px]">{family.name}</span>
-          <span className="text-forest-400 font-mono">{members.length} Members</span>
+      <div className="p-3.5 bg-stone-50 dark:bg-stone-950/80 border-t border-stone-200 dark:border-stone-800 text-[11px] text-stone-500 dark:text-stone-400">
+        <div className="flex items-center justify-between gap-2">
+          <span className="font-semibold text-stone-700 dark:text-stone-300 truncate" title={family.name}>{family.name}</span>
+          <span className="text-forest-600 dark:text-forest-400 font-mono flex-shrink-0">{members.length} {members.length === 1 ? 'Member' : 'Members'}</span>
         </div>
-        <div className="w-full bg-stone-800 h-1.5 rounded-full mt-2 overflow-hidden">
-          <div className="bg-forest-500 h-full w-4/5 rounded-full" />
-        </div>
-        <p className="text-[10px] text-stone-400 mt-1">Archival lineage active</p>
+        {family.originCountry ? (
+          <p className="text-[10px] text-stone-400 dark:text-stone-500 mt-1 truncate">
+            Origin: {family.originCountry} {family.originRegion ? `• ${family.originRegion}` : ''}
+          </p>
+        ) : (
+          <p className="text-[10px] text-stone-400 dark:text-stone-500 mt-1">Family Tree Workspace</p>
+        )}
       </div>
 
     </aside>

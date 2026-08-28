@@ -1,97 +1,158 @@
 # FamilyTree
 
-FamilyTree is a privacy-focused genealogy workspace for building interactive family trees, preserving stories and documents, and collaborating with relatives across generations.
+FamilyTree is a modern, privacy-focused genealogy platform and interactive workspace for chronicling lineages, calculating kinships, preserving historical stories and media archives, and collaborating with relatives across generations.
 
-## Screenshots
+---
 
-![FamilyTree landing page](Screenshots/LandingPage1.png)
+## 📸 Screenshots
 
-![Privacy-first onboarding section](Screenshots/LandingPage2.png)
+### 1. Hero & Interactive Multi-Generation Preview
+![FamilyTree Landing Page Hero](Screenshots/landingPage/LandingPage1.png)
 
-## Features
+### 2. Core Platform Features
+![Platform Features](Screenshots/landingPage/LandingPage2.png)
 
-- Interactive multi-generation family tree with member profiles and branches
-- Relationship finder and kinship calculations
-- Family timeline, events, stories, photos, and historical documents
-- Family map for recording places connected to a lineage
-- GEDCOM, JSON, and CSV export workflows
-- Invitations and collaboration tools for relatives
-- Privacy center, activity logs, family settings, and account settings
-- Firebase Authentication and Cloud Firestore integration
-- Responsive public pages, onboarding flow, and authenticated dashboard
+### 3. Platform Capabilities & Metrics
+![Platform Metrics](Screenshots/landingPage/LandingPage3.png)
 
-## Tech Stack
+### 4. Privacy-First Architecture & Onboarding
+![Privacy-First Architecture](Screenshots/landingPage/LandingPage4.png)
 
-- React 19 and TypeScript
-- Vite
-- React Router
-- Tailwind CSS
-- Firebase Authentication and Firestore
-- React Flow for the interactive tree
-- Leaflet and React Leaflet for maps
-- Framer Motion for UI animation
-- Oxlint for linting
+### 5. Call to Action & Navigation
+![Call to Action and Footer](Screenshots/landingPage/LandingPage5.png)
 
-## Getting Started
+---
+
+## ✨ Features
+
+- **Interactive Tree Visualizer**: Multi-generation family tree visualization powered by React Flow, featuring branch expansion/collapse, spouse and parent-child connectors.
+- **Smart Kinship & Relationship Finder**: Instant degree-of-kinship and relationship path calculations between any two relatives.
+- **Family Migration & Geography Map**: Interactive Leaflet maps pinpointing ancestral birthplaces, migrations, and diaspora travel.
+- **Photo & Document Vault**: High-resolution image archives, categorization, milestone tagging, and document management.
+- **Family Stories & Lore**: Rich-text story preservation for recording oral traditions, anecdotes, and immigration histories.
+- **Export & Printing Workflows**: GEDCOM 5.5 import/export, CSV/JSON backups, and print-ready high-resolution PDF/image tree posters.
+- **Collaborative Family Spaces**: Invite links and QR codes with role-based access (Admins, Editors, Contributors, Viewers).
+- **Privacy-First Architecture**: Sensitive living-member data masking, private family partitions, and strict permission models.
+- **Firebase Backend Integration**: Firebase Authentication (Email/Password & Google Sign-In) paired with Cloud Firestore security rules.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Framework**: [React 19](https://react.dev/) with [TypeScript](https://www.typescriptlang.org/)
+- **Build Tool**: [Vite 8](https://vite.dev/)
+- **Routing**: [React Router 7](https://reactrouter.com/)
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
+- **Graph & Tree Visualizer**: [@xyflow/react](https://reactflow.dev/)
+- **Mapping**: [Leaflet](https://leafletjs.com/) & [React Leaflet](https://react-leaflet.js.org/)
+- **Animations**: [Framer Motion](https://www.framer.com/motion/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Backend & Auth**: [Firebase v12](https://firebase.google.com/) (Authentication & Cloud Firestore)
+- **PDF & Canvas Export**: [jsPDF](https://github.com/parallax/jsPDF) & [html2canvas](https://html2canvas.hertzen.com/)
+- **Linter**: [Oxlint](https://oxc.rs/)
+
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
 
-- Node.js 20 or newer
-- npm 10 or newer
-- A Firebase project with Authentication and Cloud Firestore enabled
+- [Node.js](https://nodejs.org/) (version 20 or newer recommended)
+- [npm](https://www.npmjs.com/) (version 10 or newer)
+- A Firebase project with Authentication and Cloud Firestore enabled (optional for seeded demo mode)
 
-### Install and run
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/SahanPramuditha-Dev/FamilyTree.git
+   cd FamilyTree
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Start the local development server:
+   ```bash
+   npm run dev
+   ```
+
+   Vite will serve the application locally (typically at `http://localhost:5173`).
+
+### Production Build & Preview
 
 ```bash
-npm install
-npm run dev
-```
-
-Vite will print the local development URL, normally `http://localhost:5173`.
-
-### Production build
-
-```bash
+# Type-check and build for production
 npm run build
+
+# Preview the production build locally
 npm run preview
 ```
 
-### Lint
+### Code Quality
 
 ```bash
+# Run Oxlint
 npm run lint
 ```
 
-## Firebase Configuration
+---
 
-Firebase is initialized in [`src/services/firebase.ts`](src/services/firebase.ts). For a deployment, create a Firebase web app and configure:
+## 🔥 Firebase Configuration
 
-1. Email/password and Google sign-in providers in Firebase Authentication.
-2. Cloud Firestore in the required region.
-3. Firestore security rules that restrict family data to authorized members.
-4. Authorized domains for local development and the deployed site.
+Firebase is configured in [`src/services/firebase.ts`](src/services/firebase.ts). To connect your own Firebase project:
 
-The Firebase web API key is an identifier, not a secret. Access control must be enforced with Authentication and Firestore Security Rules. Do not place service-account credentials in this frontend project.
+1. Create a Firebase Web App in the [Firebase Console](https://console.firebase.google.com/).
+2. Enable **Authentication** (Email/Password and Google providers).
+3. Create a **Cloud Firestore** database.
+4. Set up security rules (refer to [`firestore.rules`](firestore.rules)) to restrict data access to authorized family members.
+5. Provide your configuration keys in environment variables or update `src/services/firebase.ts`.
 
-## Application Routes
+> [!NOTE]
+> The Firebase web API key is a client-side public identifier. Security is enforced through Firebase Authentication tokens and Firestore Security Rules. Never commit private service-account keys to this repository.
 
-Public routes include `/`, `/about`, `/features`, `/help`, `/login`, `/register`, and legal pages. Authenticated routes include `/dashboard`, `/tree`, `/members`, `/relationships`, `/timeline`, `/events`, `/photos`, `/stories`, `/documents`, `/map`, `/reports`, `/export`, `/collaboration`, `/privacy`, `/activity`, and settings pages.
+---
 
-## Project Structure
+## 🗺️ Application Routes
+
+| Category | Route Paths |
+| :--- | :--- |
+| **Public** | `/`, `/about`, `/features`, `/help`, `/login`, `/register`, `/privacy-policy`, `/terms` |
+| **Onboarding** | `/onboarding` |
+| **Dashboard & Tree** | `/dashboard`, `/tree`, `/members`, `/relationships` |
+| **Media & History** | `/timeline`, `/events`, `/photos`, `/stories`, `/documents`, `/map` |
+| **Tools & Settings**| `/reports`, `/export`, `/collaboration`, `/privacy`, `/activity`, `/family-settings`, `/account` |
+
+---
+
+## 📁 Project Structure
 
 ```text
-src/
-  components/   Reusable UI, layouts, modals, and tree nodes
-  context/      Authentication, family data, and theme state
-  data/         Seed family data used by the application
-  pages/        Public, auth, dashboard, and feature pages
-  services/     Firebase integration
-  types/        Shared TypeScript types
-  utils/        GEDCOM, relationship, and tree-layout helpers
+FamilyTree/
+├── Screenshots/
+│   └── landingPage/     # Application screenshots
+├── docs/
+│   └── ARCHITECTURE.md  # Architectural deep-dive & extension guide
+├── src/
+│   ├── assets/          # Static logos, icons, and hero assets
+│   ├── components/      # UI components, layouts, modals, and tree node graph renderers
+│   ├── context/         # AuthContext, FamilyContext, and ThemeContext providers
+│   ├── data/            # Mock & initial seed family records
+│   ├── pages/           # Public pages, onboarding, and authenticated workspace views
+│   ├── services/        # Firebase client setup and service layer
+│   ├── types/           # TypeScript interfaces and data models
+│   └── utils/           # GEDCOM export/import, kinship math, and layout utilities
+├── firestore.rules      # Firestore security rules
+├── package.json
+└── vite.config.ts
 ```
 
-See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for data-flow and extension guidance. Contribution conventions are in [`CONTRIBUTING.md`](CONTRIBUTING.md).
+For more architectural details, see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Contribution guidelines are in [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
-## License
+---
 
-No license has been selected for this repository yet. Treat the source as all rights reserved until a license is added by the project owner.
+## 📄 License
+
+No license has been specified yet. All rights reserved.

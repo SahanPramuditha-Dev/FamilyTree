@@ -6,9 +6,7 @@ import {
   X, 
   User, 
   BookOpen, 
-  Image, 
   FileText, 
-  MapPin, 
   ArrowRight,
   Sparkles
 } from 'lucide-react';
@@ -83,29 +81,29 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
     searchResults.documents.length;
 
   return (
-    <div className="fixed inset-0 z-50 bg-stone-950/60 backdrop-blur-sm flex items-start justify-center pt-20 px-4">
-      <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full overflow-hidden border border-stone-200 animate-in fade-in zoom-in-95 duration-150">
+    <div className="fixed inset-0 z-50 bg-stone-950/70 dark:bg-black/80 backdrop-blur-sm flex items-start justify-center pt-20 px-4">
+      <div className="bg-white dark:bg-stone-900 rounded-3xl shadow-2xl max-w-2xl w-full overflow-hidden border border-stone-200 dark:border-stone-800 animate-in fade-in zoom-in-95 duration-150">
         
         {/* Search input bar */}
-        <div className="p-4 border-b border-stone-200 flex items-center gap-3 bg-stone-50/50">
-          <Search className="w-5 h-5 text-forest-600 flex-shrink-0" />
+        <div className="p-4 border-b border-stone-200 dark:border-stone-800 flex items-center gap-3 bg-stone-50/50 dark:bg-stone-850">
+          <Search className="w-5 h-5 text-forest-600 dark:text-forest-400 flex-shrink-0" />
           <input
             type="text"
             autoFocus
             placeholder="Search relatives, stories, historical documents, places..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full bg-transparent border-0 focus:ring-0 text-sm placeholder-stone-400 text-stone-900 outline-none"
+            className="w-full bg-transparent border-0 focus:ring-0 text-sm placeholder-stone-400 dark:placeholder-stone-500 text-stone-900 dark:text-stone-100 outline-none"
           />
           {query && (
             <button 
               onClick={() => setQuery('')}
-              className="p-1 rounded-full text-stone-400 hover:text-stone-600"
+              className="p-1 rounded-full text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"
             >
               <X className="w-4 h-4" />
             </button>
           )}
-          <kbd className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-mono bg-stone-200 text-stone-600 rounded">
+          <kbd className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-mono bg-stone-200 dark:bg-stone-800 text-stone-600 dark:text-stone-400 rounded">
             ESC
           </kbd>
         </div>
@@ -113,12 +111,12 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
         {/* Results Area */}
         <div className="max-h-[60vh] overflow-y-auto p-4 space-y-4">
           {!query.trim() ? (
-            <div className="py-8 text-center text-stone-400">
-              <Sparkles className="w-8 h-8 mx-auto mb-2 text-stone-300" />
+            <div className="py-8 text-center text-stone-400 dark:text-stone-500">
+              <Sparkles className="w-8 h-8 mx-auto mb-2 text-stone-300 dark:text-stone-600" />
               <p className="text-xs">Type a name, place (e.g. "Colombo"), occupation, or tag to explore records.</p>
             </div>
           ) : totalMatches === 0 ? (
-            <div className="py-8 text-center text-stone-400 text-xs">
+            <div className="py-8 text-center text-stone-400 dark:text-stone-500 text-xs">
               No matching records found for "{query}".
             </div>
           ) : (
@@ -126,7 +124,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
               {/* Member Matches */}
               {searchResults.members.length > 0 && (
                 <div>
-                  <h5 className="text-[11px] font-bold uppercase tracking-wider text-stone-400 mb-2 flex items-center gap-1.5">
+                  <h5 className="text-[11px] font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500 mb-2 flex items-center gap-1.5">
                     <User className="w-3.5 h-3.5" /> Family Members ({searchResults.members.length})
                   </h5>
                   <div className="space-y-1.5">
@@ -137,26 +135,26 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
                           navigate(`/members/${m.id}`);
                           onClose();
                         }}
-                        className="flex items-center justify-between p-2.5 rounded-xl hover:bg-forest-50/70 border border-transparent hover:border-forest-100 cursor-pointer transition"
+                        className="flex items-center justify-between p-2.5 rounded-xl hover:bg-forest-50/70 dark:hover:bg-forest-950/40 border border-transparent hover:border-forest-200 dark:hover:border-forest-800/60 cursor-pointer transition"
                       >
                         <div className="flex items-center gap-3">
                           {m.avatarUrl ? (
-                            <img src={m.avatarUrl} alt="" className="w-9 h-9 rounded-lg object-cover" />
+                            <img src={m.avatarUrl} alt="" className="w-9 h-9 rounded-lg object-cover border border-stone-200 dark:border-stone-700" />
                           ) : (
-                            <div className="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center text-xs">
+                            <div className="w-9 h-9 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold flex items-center justify-center text-xs border border-emerald-200 dark:border-emerald-800">
                               {m.firstName.charAt(0)}
                             </div>
                           )}
                           <div>
-                            <p className="text-xs font-bold text-stone-900 leading-snug">
-                              {m.firstName} {m.lastName} {m.nickname && <span className="font-normal text-stone-500 text-[11px]">({m.nickname})</span>}
+                            <p className="text-xs font-bold text-stone-900 dark:text-stone-100 leading-snug">
+                              {m.firstName} {m.lastName} {m.nickname && <span className="font-normal text-stone-500 dark:text-stone-400 text-[11px]">({m.nickname})</span>}
                             </p>
-                            <p className="text-[11px] text-stone-500">
+                            <p className="text-[11px] text-stone-500 dark:text-stone-400">
                               Gen {m.generation} • {m.occupation || (m.isLiving ? 'Living' : 'Deceased')}
                             </p>
                           </div>
                         </div>
-                        <ArrowRight className="w-3.5 h-3.5 text-stone-400" />
+                        <ArrowRight className="w-3.5 h-3.5 text-stone-400 dark:text-stone-500" />
                       </div>
                     ))}
                   </div>
@@ -166,7 +164,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
               {/* Story Matches */}
               {searchResults.stories.length > 0 && (
                 <div>
-                  <h5 className="text-[11px] font-bold uppercase tracking-wider text-stone-400 mb-2 flex items-center gap-1.5">
+                  <h5 className="text-[11px] font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500 mb-2 flex items-center gap-1.5">
                     <BookOpen className="w-3.5 h-3.5" /> Stories ({searchResults.stories.length})
                   </h5>
                   <div className="space-y-1.5">
@@ -177,13 +175,13 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
                           navigate(`/stories`);
                           onClose();
                         }}
-                        className="p-2.5 rounded-xl hover:bg-stone-100 cursor-pointer transition flex items-center justify-between"
+                        className="p-2.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer transition flex items-center justify-between"
                       >
                         <div>
-                          <p className="text-xs font-semibold text-stone-900">{s.title}</p>
-                          <p className="text-[11px] text-stone-500 line-clamp-1">{s.content}</p>
+                          <p className="text-xs font-semibold text-stone-900 dark:text-stone-100">{s.title}</p>
+                          <p className="text-[11px] text-stone-500 dark:text-stone-400 line-clamp-1">{s.content}</p>
                         </div>
-                        <ArrowRight className="w-3.5 h-3.5 text-stone-400" />
+                        <ArrowRight className="w-3.5 h-3.5 text-stone-400 dark:text-stone-500" />
                       </div>
                     ))}
                   </div>
@@ -193,7 +191,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
               {/* Document Matches */}
               {searchResults.documents.length > 0 && (
                 <div>
-                  <h5 className="text-[11px] font-bold uppercase tracking-wider text-stone-400 mb-2 flex items-center gap-1.5">
+                  <h5 className="text-[11px] font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500 mb-2 flex items-center gap-1.5">
                     <FileText className="w-3.5 h-3.5" /> Historical Documents ({searchResults.documents.length})
                   </h5>
                   <div className="space-y-1.5">
@@ -204,13 +202,13 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
                           navigate(`/documents`);
                           onClose();
                         }}
-                        className="p-2.5 rounded-xl hover:bg-stone-100 cursor-pointer transition flex items-center justify-between"
+                        className="p-2.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer transition flex items-center justify-between"
                       >
                         <div>
-                          <p className="text-xs font-semibold text-stone-900">{d.title}</p>
-                          <p className="text-[11px] text-stone-500">{d.fileName} ({d.fileSize})</p>
+                          <p className="text-xs font-semibold text-stone-900 dark:text-stone-100">{d.title}</p>
+                          <p className="text-[11px] text-stone-500 dark:text-stone-400">{d.fileName} ({d.fileSize})</p>
                         </div>
-                        <ArrowRight className="w-3.5 h-3.5 text-stone-400" />
+                        <ArrowRight className="w-3.5 h-3.5 text-stone-400 dark:text-stone-500" />
                       </div>
                     ))}
                   </div>

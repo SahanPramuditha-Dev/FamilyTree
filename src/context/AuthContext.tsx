@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { 
   auth, 
   signInWithEmailAndPassword, 
@@ -12,15 +12,78 @@ import {
   type FirebaseUser
 } from '../services/firebase';
 import { UserProfile } from '../types';
+import { isDevMode } from '../utils/env';
+
+// Session Storage Keys
+const SESSION_STORAGE_KEY = 'ft_active_user';
+const SESSION_LAST_ACTIVE_KEY = 'ft_session_last_active';
+const SESSION_CREATED_AT_KEY = 'ft_session_created_at';
+const SESSION_REMEMBER_ME_KEY = 'ft_remember_me';
+
+// Session Expiration Timeouts
+export const SESSION_INACTIVITY_REMEMBER_MS = 7 * 24 * 60 * 60 * 1000; // 7 days inactivity
+export const SESSION_INACTIVITY_SHORT_MS = 1 * 24 * 60 * 60 * 1000;    // 1 day (when Remember Me is disabled)
+export const SESSION_MAX_AGE_MS = 14 * 24 * 60 * 60 * 1000;            // 14 days absolute max session age
+
+export function checkSessionExpired(): boolean {
+  const userSaved = localStorage.getItem(SESSION_STORAGE_KEY);
+  if (!userSaved) return false;
+
+  const lastActiveStr = localStorage.getItem(SESSION_LAST_ACTIVE_KEY);
+  const createdAtStr = localStorage.getItem(SESSION_CREATED_AT_KEY);
+  const rememberMe = localStorage.getItem(SESSION_REMEMBER_ME_KEY) !== 'false';
+
+  // If there's an active user stored without timestamps (legacy session), consider it expired
+  if (!lastActiveStr) {
+    return true;
+  }
+
+  const lastActive = parseInt(lastActiveStr, 10);
+  const createdAt = createdAtStr ? parseInt(createdAtStr, 10) : lastActive;
+  const now = Date.now();
+
+  const timeoutLimit = rememberMe ? SESSION_INACTIVITY_REMEMBER_MS : SESSION_INACTIVITY_SHORT_MS;
+
+  // Inactivity timeout
+  if (isNaN(lastActive) || now - lastActive > timeoutLimit) {
+    return true;
+  }
+
+  // Absolute maximum session age
+  if (now - createdAt > SESSION_MAX_AGE_MS) {
+    return true;
+  }
+
+  return false;
+}
+
+export function recordSessionActivity() {
+  localStorage.setItem(SESSION_LAST_ACTIVE_KEY, String(Date.now()));
+}
+
+export function initSession(rememberMe: boolean = true) {
+  const now = String(Date.now());
+  localStorage.setItem(SESSION_LAST_ACTIVE_KEY, now);
+  localStorage.setItem(SESSION_CREATED_AT_KEY, now);
+  localStorage.setItem(SESSION_REMEMBER_ME_KEY, String(rememberMe));
+}
+
+export function clearSession() {
+  localStorage.removeItem(SESSION_STORAGE_KEY);
+  localStorage.removeItem(SESSION_LAST_ACTIVE_KEY);
+  localStorage.removeItem(SESSION_CREATED_AT_KEY);
+  localStorage.removeItem(SESSION_REMEMBER_ME_KEY);
+}
 
 interface AuthContextType {
   user: UserProfile | null;
   firebaseUser: FirebaseUser | null;
   loading: boolean;
-  login: (email: string, pass: string) => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
-  register: (name: string, email: string, pass: string) => Promise<void>;
-  quickDemoLogin: (role?: 'owner' | 'admin' | 'viewer') => void;
+  isDemoUser: boolean;
+  login: (email: string, pass: string, rememberMe?: boolean) => Promise<void>;
+  signInWithGoogle: (rememberMe?: boolean) => Promise<void>;
+  register: (name: string, email: string, pass: string, rememberMe?: boolean) => Promise<void>;
+  quickDemoLogin: (role?: 'owner' | 'admin' | 'viewer', rememberMe?: boolean) => void;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateUserProfile: (data: Partial<UserProfile>) => Promise<void>;
@@ -28,187 +91,206 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function buildUserProfile(fbUser: FirebaseUser, role: UserProfile['role'] = 'owner'): UserProfile {
+  return {
+    uid: fbUser.uid,
+    email: fbUser.email || '',
+    displayName: fbUser.displayName || fbUser.email?.split('@')[0] || 'Family Historian',
+    photoURL: fbUser.photoURL || undefined,
+    defaultFamilyId: `fam-${fbUser.uid}`,
+    twoFactorEnabled: false,
+    language: 'English (US)',
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+    role,
+    createdAt: fbUser.metadata.creationTime || new Date().toISOString(),
+  };
+}
+
+function createDemoUser(role: 'owner' | 'admin' | 'viewer'): UserProfile {
+  return {
+    uid: `demo-${role}`,
+    email: 'demo@familytree.dev',
+    displayName:
+      role === 'owner'
+        ? 'Tree Creator (Owner)'
+        : role === 'admin'
+          ? 'Family Historian (Admin)'
+          : 'Guest Relative (Viewer)',
+    photoURL:
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+    bio: 'Family historian documenting ancestral lineages, oral traditions, and memories.',
+    defaultFamilyId: 'fam-sample-tree',
+    twoFactorEnabled: false,
+    language: 'English (US)',
+    timezone: 'UTC',
+    role: role === 'viewer' ? 'user' : 'admin',
+    createdAt: new Date().toISOString(),
+  };
+}
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(() => {
-    const saved = localStorage.getItem('ft_active_user');
-    return saved ? JSON.parse(saved) : null;
+    if (checkSessionExpired()) {
+      clearSession();
+      return null;
+    }
+    const saved = localStorage.getItem(SESSION_STORAGE_KEY);
+    if (!saved) return null;
+    try {
+      return JSON.parse(saved) as UserProfile;
+    } catch {
+      clearSession();
+      return null;
+    }
   });
+
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isDemoUser, setIsDemoUser] = useState<boolean>(() => user?.uid.startsWith('demo-') ?? false);
+
+  const logout = useCallback(async () => {
+    if (firebaseUser || auth.currentUser) {
+      try {
+        await signOut(auth);
+      } catch (err) {
+        console.warn('Firebase sign out error:', err);
+      }
+    }
+    setUser(null);
+    setIsDemoUser(false);
+    clearSession();
+  }, [firebaseUser]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (fbUser) => {
       setFirebaseUser(fbUser);
       if (fbUser) {
-        const customUser: UserProfile = {
-          uid: fbUser.uid,
-          email: fbUser.email || '',
-          displayName: fbUser.displayName || fbUser.email?.split('@')[0] || 'Family Historian',
-          photoURL: fbUser.photoURL || undefined,
-          defaultFamilyId: 'fam-user-tree',
-          twoFactorEnabled: false,
-          language: 'English (US)',
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
-          role: 'owner',
-          createdAt: fbUser.metadata.creationTime || new Date().toISOString()
-        };
-        setUser(customUser);
-        localStorage.setItem('ft_active_user', JSON.stringify(customUser));
+        if (checkSessionExpired()) {
+          logout();
+        } else {
+          const customUser = buildUserProfile(fbUser);
+          setUser(customUser);
+          setIsDemoUser(false);
+          localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(customUser));
+          recordSessionActivity();
+        }
+      } else if (!isDemoUser) {
+        setUser(null);
+        clearSession();
       }
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [isDemoUser, logout]);
 
-  const signInWithGoogle = async () => {
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const fbUser = result.user;
-      const customUser: UserProfile = {
-        uid: fbUser.uid,
-        email: fbUser.email || '',
-        displayName: fbUser.displayName || 'Family Historian',
-        photoURL: fbUser.photoURL || undefined,
-        defaultFamilyId: 'fam-user-tree',
-        twoFactorEnabled: false,
-        language: 'English (US)',
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
-        role: 'owner',
-        createdAt: fbUser.metadata.creationTime || new Date().toISOString()
-      };
-      setUser(customUser);
-      localStorage.setItem('ft_active_user', JSON.stringify(customUser));
-    } catch (err: any) {
-      console.warn('Google sign-in popup fallback to simulated account:', err.message);
-      // Fallback for offline / demo environments
-      const customUser: UserProfile = {
-        uid: `google-${Date.now()}`,
-        email: 'google.user@example.com',
-        displayName: 'Google Account User',
-        photoURL: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&q=80',
-        defaultFamilyId: 'fam-user-tree',
-        twoFactorEnabled: false,
-        language: 'English (US)',
-        timezone: 'UTC',
-        role: 'owner',
-        createdAt: new Date().toISOString()
-      };
-      setUser(customUser);
-      localStorage.setItem('ft_active_user', JSON.stringify(customUser));
-    }
-  };
+  // Track user activity and check for session expiration
+  useEffect(() => {
+    if (!user) return;
 
-  const login = async (email: string, pass: string) => {
-    try {
-      const cred = await signInWithEmailAndPassword(auth, email, pass);
-      const customUser: UserProfile = {
-        uid: cred.user.uid,
-        email: cred.user.email || email,
-        displayName: cred.user.displayName || email.split('@')[0],
-        photoURL: cred.user.photoURL || undefined,
-        defaultFamilyId: 'fam-user-tree',
-        twoFactorEnabled: false,
-        language: 'English (US)',
-        timezone: 'UTC',
-        role: email.includes('admin') ? 'admin' : 'owner',
-        createdAt: new Date().toISOString()
-      };
-      setUser(customUser);
-      localStorage.setItem('ft_active_user', JSON.stringify(customUser));
-    } catch (err: any) {
-      // Local fallback
-      const customUser: UserProfile = {
-        uid: `user-${Date.now()}`,
-        email,
-        displayName: email.split('@')[0],
-        defaultFamilyId: 'fam-user-tree',
-        twoFactorEnabled: false,
-        language: 'English (US)',
-        timezone: 'UTC',
-        role: email.includes('admin') ? 'admin' : 'owner',
-        createdAt: new Date().toISOString()
-      };
-      setUser(customUser);
-      localStorage.setItem('ft_active_user', JSON.stringify(customUser));
-    }
-  };
-
-  const register = async (name: string, email: string, pass: string) => {
-    try {
-      const cred = await createUserWithEmailAndPassword(auth, email, pass);
-      await firebaseUpdateProfile(cred.user, { displayName: name });
-      const customUser: UserProfile = {
-        uid: cred.user.uid,
-        email,
-        displayName: name,
-        defaultFamilyId: 'fam-user-tree',
-        twoFactorEnabled: false,
-        language: 'English (US)',
-        timezone: 'UTC',
-        role: 'owner',
-        createdAt: new Date().toISOString()
-      };
-      setUser(customUser);
-      localStorage.setItem('ft_active_user', JSON.stringify(customUser));
-    } catch (err) {
-      const customUser: UserProfile = {
-        uid: `user-${Date.now()}`,
-        email,
-        displayName: name,
-        defaultFamilyId: 'fam-user-tree',
-        twoFactorEnabled: false,
-        language: 'English (US)',
-        timezone: 'UTC',
-        role: 'owner',
-        createdAt: new Date().toISOString()
-      };
-      setUser(customUser);
-      localStorage.setItem('ft_active_user', JSON.stringify(customUser));
-    }
-  };
-
-  const quickDemoLogin = (role: 'owner' | 'admin' | 'viewer' = 'owner') => {
-    const demo: UserProfile = {
-      uid: 'user-demo-1',
-      email: 'demo@familytree.dev',
-      displayName: role === 'owner' ? 'Tree Creator (Owner)' : role === 'admin' ? 'Family Historian (Admin)' : 'Guest Relative (Viewer)',
-      photoURL: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
-      bio: 'Family historian documenting ancestral lineages, oral traditions, and memories.',
-      defaultFamilyId: 'fam-sample-tree',
-      twoFactorEnabled: false,
-      language: 'English (US)',
-      timezone: 'UTC',
-      role: role === 'owner' || role === 'admin' ? 'admin' : 'user',
-      createdAt: new Date().toISOString()
+    let lastRecorded = Date.now();
+    const handleActivity = () => {
+      const now = Date.now();
+      if (now - lastRecorded > 30000) {
+        lastRecorded = now;
+        recordSessionActivity();
+      }
     };
-    setUser(demo);
-    localStorage.setItem('ft_active_user', JSON.stringify(demo));
+
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+    events.forEach((evt) => window.addEventListener(evt, handleActivity, { passive: true }));
+
+    // Periodic check every 60 seconds
+    const interval = setInterval(() => {
+      if (checkSessionExpired()) {
+        logout();
+        if (!window.location.pathname.startsWith('/login')) {
+          window.location.href = '/login?expired=true';
+        }
+      }
+    }, 60000);
+
+    // Tab focus / visibility change check (when user comes back to the tab after days)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        if (checkSessionExpired()) {
+          logout();
+          if (!window.location.pathname.startsWith('/login')) {
+            window.location.href = '/login?expired=true';
+          }
+        } else {
+          recordSessionActivity();
+        }
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      events.forEach((evt) => window.removeEventListener(evt, handleActivity));
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [user, logout]);
+
+  const signInWithGoogle = async (rememberMe: boolean = true) => {
+    const result = await signInWithPopup(auth, googleProvider);
+    const customUser = buildUserProfile(result.user);
+    initSession(rememberMe);
+    setUser(customUser);
+    setIsDemoUser(false);
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(customUser));
   };
 
-  const logout = async () => {
-    try {
-      await signOut(auth);
-    } catch (e) {
-      // ignore
+  const login = async (email: string, pass: string, rememberMe: boolean = true) => {
+    const cred = await signInWithEmailAndPassword(auth, email, pass);
+    const customUser = buildUserProfile(
+      cred.user,
+      email.includes('admin') ? 'admin' : 'owner'
+    );
+    initSession(rememberMe);
+    setUser(customUser);
+    setIsDemoUser(false);
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(customUser));
+  };
+
+  const register = async (name: string, email: string, pass: string, rememberMe: boolean = true) => {
+    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+    await firebaseUpdateProfile(cred.user, { displayName: name });
+    const customUser = buildUserProfile(cred.user, 'owner');
+    customUser.displayName = name;
+    initSession(rememberMe);
+    setUser(customUser);
+    setIsDemoUser(false);
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(customUser));
+  };
+
+  const quickDemoLogin = (role: 'owner' | 'admin' | 'viewer' = 'owner', rememberMe: boolean = true) => {
+    if (!isDevMode) {
+      throw new Error('Demo login is only available in development mode.');
     }
-    setUser(null);
-    localStorage.removeItem('ft_active_user');
+    const demo = createDemoUser(role);
+    initSession(rememberMe);
+    setUser(demo);
+    setIsDemoUser(true);
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(demo));
   };
 
   const resetPassword = async (email: string) => {
-    try {
-      await sendPasswordResetEmail(auth, email);
-    } catch (e) {
-      console.log('Password reset sent to:', email);
-    }
+    await sendPasswordResetEmail(auth, email);
   };
 
   const updateUserProfile = async (data: Partial<UserProfile>) => {
     if (!user) return;
     const updated = { ...user, ...data };
     setUser(updated);
-    localStorage.setItem('ft_active_user', JSON.stringify(updated));
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(updated));
+    recordSessionActivity();
+    if (firebaseUser && (data.displayName || data.photoURL)) {
+      await firebaseUpdateProfile(firebaseUser, {
+        displayName: data.displayName ?? firebaseUser.displayName,
+        photoURL: data.photoURL ?? firebaseUser.photoURL,
+      });
+    }
   };
 
   return (
@@ -216,6 +298,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       user,
       firebaseUser,
       loading,
+      isDemoUser,
       login,
       signInWithGoogle,
       register,
