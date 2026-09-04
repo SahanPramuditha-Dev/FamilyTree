@@ -1,0 +1,27 @@
+name: Feature request
+description: Propose an improvement to FamilyTree
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or opportunity
+      description: What family-history, collaboration, privacy, or usability problem would this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: privacy
+    attributes:
+      label: Privacy considerations
+      description: Note any effect on permissions, sharing, exports, photos, documents, or personal data.
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
