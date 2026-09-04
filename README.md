@@ -4,6 +4,14 @@ FamilyTree is a modern, privacy-focused genealogy platform and interactive works
 
 ---
 
+## 🏗️ Architecture Overview
+
+![FamilyTree architecture overview](assets/architecture-overview.svg)
+
+The application separates the React/TypeScript interface from genealogy-specific domain logic and Firebase-backed identity, family data, media, collaboration, and export workflows. For a deeper technical breakdown, see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+
+---
+
 ## 📸 Screenshots
 
 ### 1. Hero & Interactive Multi-Generation Preview
@@ -133,6 +141,8 @@ Firebase is configured in [`src/services/firebase.ts`](src/services/firebase.ts)
 FamilyTree/
 ├── Screenshots/
 │   └── landingPage/     # Application screenshots
+├── assets/
+│   └── architecture-overview.svg
 ├── docs/
 │   └── ARCHITECTURE.md  # Architectural deep-dive & extension guide
 ├── src/
